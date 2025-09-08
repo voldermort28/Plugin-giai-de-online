@@ -1,34 +1,29 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-// Thêm cột mới
+// Thêm cột "Mã đề"
 function lb_test_add_baikiemtra_admin_columns($columns) {
     $new_columns = [];
     foreach ($columns as $key => $title) {
         $new_columns[$key] = $title;
         if ($key == 'title') {
+            // Chỉ thêm cột "Mã đề"
             $new_columns['ma_de'] = __('Mã đề', 'lb-test');
-            $new_columns['nguoi_lam_bai'] = __('Người làm bài', 'lb-test');
         }
     }
     return $new_columns;
 }
 add_filter('manage_dethi_baikiemtra_posts_columns', 'lb_test_add_baikiemtra_admin_columns');
 
-// Hiển thị dữ liệu
+// Hiển thị dữ liệu cho cột "Mã đề"
 function lb_test_display_baikiemtra_admin_columns_data($column, $post_id) {
-    switch ($column) {
-        case 'ma_de':
-            echo esc_html(get_post_meta($post_id, 'lb_test_ma_de', true)) ?: '—';
-            break;
-        case 'nguoi_lam_bai':
-            echo esc_html(get_post_meta($post_id, 'lb_test_ten_nguoi_lam_bai', true)) ?: '—';
-            break;
+    if ($column === 'ma_de') {
+        echo esc_html(get_post_meta($post_id, 'lb_test_ma_de', true)) ?: '—';
     }
 }
 add_action('manage_dethi_baikiemtra_posts_custom_column', 'lb_test_display_baikiemtra_admin_columns_data', 10, 2);
 
-// Cho phép sắp xếp
+// Cho phép sắp xếp cột "Mã đề"
 function lb_test_make_ma_de_column_sortable($columns) {
     $columns['ma_de'] = 'ma_de';
     return $columns;

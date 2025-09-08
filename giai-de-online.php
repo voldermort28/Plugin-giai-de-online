@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Giải Đề Online
  * Description:       Một hệ thống quản lý câu hỏi, bài kiểm tra, làm bài và chấm điểm online.
- * Version:           1.0.0
- * Author:            Gemini AI
+ * Version:           2.0.0
+ * Author:            VolPi
  * Text Domain:       lb-test
  */
 
@@ -79,6 +79,8 @@ include_once(LB_TEST_PLUGIN_PATH . 'includes/4-shortcode.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/5-ajax-handlers.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/7-frontend-grading.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/8-import-page.php');
+include_once(LB_TEST_PLUGIN_PATH . 'includes/bulk-generator-page.php'); // FILE MỚI
+include_once(LB_TEST_PLUGIN_PATH . 'includes/bulk-management.php');    // FILE MỚI
 
 // Nạp file script và style
 function lb_test_enqueue_scripts() {
