@@ -7,63 +7,38 @@ function lb_test_render_shortcode() {
     if (isset($_GET['ma_de']) && !empty($_GET['ma_de'])) {
         $ma_de = sanitize_text_field($_GET['ma_de']);
         
-        $args = [
+        $args = array(
             'post_type' => 'dethi_baikiemtra',
             'meta_key' => 'lb_test_ma_de',
             'meta_value' => $ma_de,
             'posts_per_page' => 1,
-            'post_status' => 'publish',
-        ];
+            'post_status' => 'publish', // CHỈ TÌM CÁC BÀI ĐÃ ĐĂNG
+        );
         $test_query = new WP_Query($args);
 
         if ($test_query->have_posts()) {
             $test_query->the_post();
             $test_id = get_the_ID();
             $thoi_gian = get_post_meta($test_id, 'lb_test_thoi_gian', true);
-            $test_type = get_post_meta($test_id, 'lb_test_type', true) ?: 'fixed';
-            $question_ids = [];
-
-            if ($test_type === 'random') {
-                $random_count = get_post_meta($test_id, 'lb_test_random_count', true);
-                $random_cat = get_post_meta($test_id, 'lb_test_random_cat', true);
-                
-                $query_args = [
-                    'post_type' => 'dethi_cauhoi',
-                    'posts_per_page' => $random_count ?: 10,
-                    'orderby' => 'rand',
-                    'fields' => 'ids'
-                ];
-
-                if ($random_cat > 0) {
-                    // Lọc theo một Môn học cụ thể
-                    $query_args['tax_query'] = [[
-                        'taxonomy' => 'mon_hoc',
-                        'terms' => $random_cat,
-                    ]];
-                } elseif ($random_cat == -1) {
-                    // Lọc những câu hỏi CHƯA CÓ Môn học
-                    $query_args['tax_query'] = [[
-                        'taxonomy' => 'mon_hoc',
-                        'operator' => 'NOT EXISTS',
-                    ]];
-                }
-                // Nếu $random_cat = 0 (Tất cả Môn học), thì không cần thêm tax_query
-
-                $question_ids = get_posts($query_args);
-
-            } else { // 'fixed'
-                $question_ids = get_post_meta($test_id, 'lb_test_danh_sach_cau_hoi', true);
-            }
+            $question_ids = get_post_meta($test_id, 'lb_test_danh_sach_cau_hoi', true);
 
             echo '<h1>' . get_the_title() . '</h1>';
             
-            $submitter_name = get_post_meta($test_id, 'lb_test_ten_nguoi_lam_bai', true);
-            echo '<h3>Thí sinh: ' . esc_html($submitter_name) . '</h3>';
             if (!empty($thoi_gian) && is_numeric($thoi_gian)) {
                  echo '<div id="lb-test-timer" style="position:fixed; top:10px; right:10px; background: #fff; border: 2px solid red; padding: 10px; font-size: 1.2em; z-index: 999;" data-time="' . intval($thoi_gian) . '"></div>';
             }
 
             if (!empty($question_ids)) {
+                // Logic MỚI: Ưu tiên tên thí sinh nhập từ form, nếu không có thì lấy tên đã lưu trong bài thi
+                $submitter_name = '';
+                if (!empty($_GET['submitter_name'])) {
+                    $submitter_name = sanitize_text_field($_GET['submitter_name']);
+                } else {
+                    $submitter_name = get_post_meta($test_id, 'lb_test_ten_nguoi_lam_bai', true);
+                }
+
+                echo '<h3>Thí sinh: ' . esc_html($submitter_name) . '</h3>';
+
                 echo '<form id="lb-test-form">';
                 wp_nonce_field('lb_test_submit_nonce', 'nonce');
                 echo '<input type="hidden" name="test_id" value="' . $test_id . '">';
@@ -81,19 +56,11 @@ function lb_test_render_shortcode() {
                     
                     if ($loai_cau_hoi === 'trac_nghiem') {
                         $lua_chon = get_post_meta($q_id, 'lb_test_lua_chon', true);
-                        if (!empty($lua_chon) && is_array($lua_chon)) {
-                            $keys = array_keys($lua_chon);
-                            shuffle($keys);
-                            $shuffled_lua_chon = [];
-                            foreach ($keys as $key) {
-                                $shuffled_lua_chon[$key] = $lua_chon[$key];
-                            }
-                            echo '<ul style="list-style-type: none; padding-left: 0;">';
-                            foreach ($shuffled_lua_chon as $key => $value) {
-                                 echo '<li><label><input type="radio" name="answers[' . $q_id . ']" value="' . esc_attr($key) . '"> ' . esc_html($value) . '</label></li>';
-                            }
-                            echo '</ul>';
+                        echo '<ul style="list-style-type: none; padding-left: 0;">';
+                        foreach ($lua_chon as $key => $value) {
+                             echo '<li><label><input type="radio" name="answers[' . $q_id . ']" value="' . esc_attr($key) . '"> ' . esc_html($value) . '</label></li>';
                         }
+                        echo '</ul>';
                     } else {
                         echo '<textarea name="answers[' . $q_id . ']" rows="5" class="widefat" style="width: 100%;"></textarea>';
                     }
@@ -104,16 +71,20 @@ function lb_test_render_shortcode() {
                 echo '</form>';
                 echo '<div id="test-result-message"></div>';
             } else {
-                 echo '<p>Bài kiểm tra này không có câu hỏi nào hoặc không thể tạo đề ngẫu nhiên.</p>';
+                 echo '<p>Bài kiểm tra này chưa có câu hỏi nào.</p>';
             }
+
             wp_reset_postdata();
         } else {
             echo '<p>Không tìm thấy bài kiểm tra với mã đề này. Vui lòng thử lại.</p>';
+            // Hiển thị lại form nhập mã đề
             display_ma_de_form();
         }
     } else {
+        // Nếu không có mã đề, hiển thị form
         display_ma_de_form();
     }
+
     return ob_get_clean();
 }
 add_shortcode('lam_bai_kiem_tra', 'lb_test_render_shortcode');
@@ -121,8 +92,14 @@ add_shortcode('lam_bai_kiem_tra', 'lb_test_render_shortcode');
 function display_ma_de_form() {
     echo '
     <form method="GET" action="">
-        <label for="ma_de">Nhập mã đề thi:</label>
-        <input type="text" name="ma_de" id="ma_de" required>
+        <div style="margin-bottom: 10px;">
+            <label for="ma_de">Nhập mã đề thi:</label><br>
+            <input type="text" name="ma_de" id="ma_de" required>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label for="submitter_name">Nhập tên của bạn (Tùy chọn):</label><br>
+            <input type="text" name="submitter_name" id="submitter_name">
+        </div>
         <button type="submit">Bắt đầu làm bài</button>
     </form>
     ';

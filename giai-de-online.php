@@ -79,7 +79,6 @@ include_once(LB_TEST_PLUGIN_PATH . 'includes/4-shortcode.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/5-ajax-handlers.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/7-frontend-grading.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/8-import-page.php');
-include_once(LB_TEST_PLUGIN_PATH . 'includes/actions.php');
 
 // Nạp file script và style
 function lb_test_enqueue_scripts() {
