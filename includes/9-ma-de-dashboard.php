@@ -19,43 +19,363 @@ function lb_ma_de_dashboard_shortcode() {
 
     ob_start();
 
-    // **QUAN TRỌNG**: Thay 'trang-cham-bai' bằng slug (đường dẫn) của trang chứa shortcode [grader_dashboard] của bạn.
-    // Ví dụ: nếu URL là example.com/giam-khao/cham-bai, bạn sẽ điền '/giam-khao/cham-bai/'.
+    // --- Dữ liệu ---
     $grader_dashboard_url = get_site_url(null, '/chamdiem/'); 
+    $all_tests = new WP_Query([
+        'post_type' => 'dethi_baikiemtra',
+        'posts_per_page' => -1,
+        'post_status' => ['publish', 'draft'],
+        'orderby' => 'date',
+        'order' => 'DESC',
+    ]);
+
+    // Đếm số lượng cho mỗi tab
+    $counts = ['all' => 0, 'ready' => 0, 'submitted' => 0, 'graded' => 0];
+    if ($all_tests->have_posts()) {
+        $counts['all'] = $all_tests->post_count;
+        global $wpdb;
+        $submissions_table = $wpdb->prefix . 'lb_test_submissions';
+        
+        while($all_tests->have_posts()) {
+            $all_tests->the_post();
+            $test_id = get_the_ID();
+            $post_status = get_post_status($test_id);
+
+            if ($post_status === 'publish') {
+                $counts['ready']++;
+            } else { // draft
+                $submission = $wpdb->get_row($wpdb->prepare("SELECT status FROM $submissions_table WHERE test_id = %d", $test_id));
+                if ($submission) {
+                    if ($submission->status === 'graded') {
+                        $counts['graded']++;
+                    } else { // submitted
+                        $counts['submitted']++;
+                    }
+                }
+            }
+        }
+        wp_reset_postdata();
+    }
 
     ?>
     <style>
-        .dsmd-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; }
-        .dsmd-table th, .dsmd-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .dsmd-table th { background-color: #f2f2f2; }
-        .status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .status-ready { background-color: #28a745; } /* Green */
-        .status-submitted { background-color: #ffc107; } /* Orange */
-        .status-graded { background-color: #007bff; } /* Blue */
-        .copy-ma-de { cursor: pointer; border: none; background: #eee; padding: 3px 6px; border-radius: 3px; margin-left: 5px; }
-        .copy-ma-de:hover { background: #ddd; }
+        :root {
+            --gdv-bg: #f4f7fe;
+            --gdv-white: #ffffff;
+            --gdv-primary: #4a43ec;
+            --gdv-text-primary: #1a214f;
+            --gdv-text-secondary: #7a859f;
+            --gdv-border: #e5e9f2;
+            --gdv-status-ready-bg: #e9f8f1;
+            --gdv-status-ready-text: #28a745;
+            --gdv-status-submitted-bg: #fff8e1;
+            --gdv-status-submitted-text: #ffc107;
+            --gdv-status-graded-bg: #e7f3ff;
+            --gdv-status-graded-text: #007bff;
+            --gdv-status-nodata-bg: #f8f9fa;
+            --gdv-status-nodata-text: #6c757d;
+            --gdv-danger-bg: #fdeaea;
+            --gdv-danger-text: #dc3545;
+        }
+        .gdv-container {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--gdv-bg);
+            padding: 20px;
+            border-radius: 16px;
+        }
+        .gdv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .gdv-header h1 {
+            font-size: 24px;
+            color: var(--gdv-text-primary);
+            margin: 0;
+        }
+        .gdv-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .gdv-tabs {
+            display: flex;
+            gap: 8px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .gdv-tabs li {
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--gdv-text-secondary);
+            background-color: transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .gdv-tabs li.active, .gdv-tabs li:hover {
+            background-color: var(--gdv-white);
+            color: var(--gdv-text-primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .gdv-tabs .count {
+            background-color: var(--gdv-border);
+            color: var(--gdv-text-secondary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        .gdv-table-wrapper {
+            background-color: var(--gdv-white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .gdv-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .gdv-table th, .gdv-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--gdv-border);
+            color: var(--gdv-text-secondary);
+            font-size: 14px;
+        }
+        .gdv-table th {
+            color: var(--gdv-text-primary);
+            font-weight: 600;
+        }
+        .gdv-table tbody tr:hover {
+            background-color: #fafbff;
+        }
+        .gdv-table td strong {
+            color: var(--gdv-text-primary);
+            font-weight: 500;
+        }
+        .gdv-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: capitalize;
+        }
+        .gdv-status::before {
+            content: '●';
+            margin-right: 6px;
+        }
+        .gdv-status--ready { background-color: var(--gdv-status-ready-bg); color: var(--gdv-status-ready-text); }
+        .gdv-status--submitted { background-color: var(--gdv-status-submitted-bg); color: var(--gdv-status-submitted-text); }
+        .gdv-status--graded { background-color: var(--gdv-status-graded-bg); color: var(--gdv-status-graded-text); }
+        .gdv-status--nodata { background-color: var(--gdv-status-nodata-bg); color: var(--gdv-status-nodata-text); }
+        
+        .gdv-action-link {
+            color: var(--gdv-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .gdv-bulk-actions {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--gdv-text-primary);
+            color: var(--gdv-white);
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: bottom 0.3s ease-in-out;
+            z-index: 1000;
+        }
+        .gdv-bulk-actions.visible {
+            bottom: 20px;
+        }
+        .gdv-bulk-actions button {
+            background: transparent;
+            border: none;
+            color: var(--gdv-white);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .gdv-bulk-actions button:hover { background-color: rgba(255,255,255,0.1); }
+        .gdv-bulk-actions .delete-btn { background-color: var(--gdv-danger-bg); color: var(--gdv-danger-text); }
+        .gdv-bulk-actions .delete-btn:hover { background-color: #fbd0d4; }
+
+        .gdv-main-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--gdv-border);
+        }
+        .gdv-main-tab {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: var(--gdv-text-secondary);
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            margin-bottom: -1px;
+        }
+        .gdv-main-tab.active, .gdv-main-tab:hover {
+            color: var(--gdv-primary);
+            border-bottom-color: var(--gdv-primary);
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 768px) {
+            .gdv-table-wrapper {
+                overflow-x: auto; /* Enable horizontal scrolling */
+                -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            }
+            .gdv-table th, .gdv-table td {
+                white-space: nowrap; /* Prevent content from wrapping */
+            }
+            .gdv-tabs {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .gdv-tabs li {
+                padding: 6px 12px;
+            }
+            .gdv-container {
+                padding: 10px;
+            }
+            .gdv-main-tabs {
+                flex-wrap: wrap;
+            }
+        }
     </style>
 
-    <div class="ma-de-dashboard">
-        <h2>Danh Sách Đề Thi</h2>
-        <p>Xem trạng thái các mã đề, lấy mã để giao cho thí sinh và đi đến trang chấm bài.</p>
-        <?php lb_render_ma_de_list_table($grader_dashboard_url); ?>
+    <div class="gdv-container">
+        <div class="gdv-main-tabs">
+            <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab">Chấm Bài & Lịch Sử</a>
+            <a href="<?php echo esc_url(get_site_url(null, '/code/')); ?>" class="gdv-main-tab active">Danh Sách Đề Thi</a>
+        </div>
+
+        <div class="gdv-header">
+            <h1>Danh sách Đề thi</h1>
+        </div>
+
+        <div class="gdv-toolbar">
+            <ul class="gdv-tabs">
+                <li data-filter="all">Tất cả <span class="count"><?php echo $counts['all']; ?></span></li>
+                <li class="active" data-filter="ready">Sẵn sàng <span class="count"><?php echo $counts['ready']; ?></span></li>
+                <li data-filter="submitted">Cần chấm <span class="count"><?php echo $counts['submitted']; ?></span></li>
+                <li data-filter="graded">Đã chấm <span class="count"><?php echo $counts['graded']; ?></span></li>
+            </ul>
+        </div>
+
+        <div class="gdv-table-wrapper">
+            <?php lb_render_ma_de_list_table($grader_dashboard_url, $all_tests); ?>
+        </div>
+    </div>
+
+    <div id="gdv-bulk-actions" class="gdv-bulk-actions">
+        <span id="gdv-selected-count">0 items selected</span>
+        <button id="gdv-bulk-delete-btn" class="delete-btn">Delete</button>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.body.addEventListener('click', function(event) {
-                if (event.target.matches('.copy-ma-de')) {
-                    const button = event.target;
-                    const maDe = button.getAttribute('data-code');
-                    navigator.clipboard.writeText(maDe).then(() => {
-                        const originalText = button.innerText;
-                        button.innerText = 'Đã chép!';
-                        setTimeout(() => { button.innerText = originalText; }, 1500);
-                    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.gdv-tabs li');
+        const tableRows = document.querySelectorAll('.gdv-table tbody tr');
+        const selectAllCheckbox = document.getElementById('gdv-select-all');
+        const rowCheckboxes = document.querySelectorAll('.gdv-row-checkbox');
+        const bulkActionsBar = document.getElementById('gdv-bulk-actions');
+        const selectedCountSpan = document.getElementById('gdv-selected-count');
+        const bulkDeleteBtn = document.getElementById('gdv-bulk-delete-btn');
+
+        // Function to filter rows
+        function filterRows(filter) {
+            tableRows.forEach(row => {
+                if (filter === 'all' || row.getAttribute('data-status') === filter) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
             });
+        }
+
+        // Tab filtering
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.getAttribute('data-filter');
+                filterRows(filter);
+            });
         });
+
+        // Set initial filter based on active tab
+        const initialActiveTab = document.querySelector('.gdv-tabs li.active');
+        if (initialActiveTab) {
+            filterRows(initialActiveTab.getAttribute('data-filter'));
+        }
+
+        // Checkbox logic
+        function updateBulkActionsBar() {
+            const selectedCheckboxes = document.querySelectorAll('.gdv-row-checkbox:checked');
+            const count = selectedCheckboxes.length;
+            
+            if (count > 0) {
+                selectedCountSpan.textContent = `${count} mục đã chọn`;
+                bulkActionsBar.classList.add('visible');
+            } else {
+                bulkActionsBar.classList.remove('visible');
+            }
+            selectAllCheckbox.checked = (count > 0 && count === rowCheckboxes.length);
+        }
+
+        selectAllCheckbox.addEventListener('change', function() {
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkActionsBar();
+        });
+
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateBulkActionsBar);
+        });
+
+        // Bulk delete action
+        bulkDeleteBtn.addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.gdv-row-checkbox:checked')).map(cb => cb.value);
+            if (selectedIds.length === 0) {
+                alert('Vui lòng chọn ít nhất một bài thi để xóa.');
+                return;
+            }
+            if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn ${selectedIds.length} bài thi đã chọn? Hành động này không thể hoàn tác.`)) {
+                // Placeholder for future AJAX deletion
+                console.log('Deleting submission IDs:', selectedIds);
+                alert('Chức năng xóa hàng loạt đang được phát triển.');
+            }
+        });
+
+        // Copy to clipboard
+        document.body.addEventListener('click', function(event) {
+            if (event.target.matches('.copy-ma-de')) {
+                const button = event.target;
+                const maDe = button.getAttribute('data-code');
+                navigator.clipboard.writeText(maDe).then(() => {
+                    const originalText = button.innerText;
+                    button.innerText = 'Đã chép!';
+                    setTimeout(() => { button.innerText = originalText; }, 1500);
+                });
+            }
+        });
+    });
     </script>
     <?php
 
@@ -67,28 +387,20 @@ add_shortcode('danh_sach_ma_de', 'lb_ma_de_dashboard_shortcode');
 /**
  * Hàm render bảng danh sách mã đề.
  */
-function lb_render_ma_de_list_table($grader_dashboard_url) {
+function lb_render_ma_de_list_table($grader_dashboard_url, $tests_query) {
     global $wpdb;
     $submissions_table = $wpdb->prefix . 'lb_test_submissions';
 
-    $args = [
-        'post_type' => 'dethi_baikiemtra',
-        'posts_per_page' => -1,
-        'post_status' => ['publish', 'draft'],
-        'orderby' => 'post_title',
-        'order' => 'ASC',
-    ];
-    $tests_query = new WP_Query($args);
-
     if ($tests_query->have_posts()) {
         ?>
-        <table class="dsmd-table">
+        <table class="gdv-table">
             <thead>
                 <tr>
-                    <th>Tên Bài kiểm tra</th>
+                    <th><input type="checkbox" id="gdv-select-all"></th>
+                    <th>Tên đề thi</th>
                     <th>Mã đề</th>
                     <th>Trạng thái</th>
-                    <th>Người làm bài</th>
+                    <th>Thí sinh</th>
                     <th>Thời gian nộp</th>
                     <th>Hành động</th>
                 </tr>
@@ -101,43 +413,45 @@ function lb_render_ma_de_list_table($grader_dashboard_url) {
                     $ma_de = get_post_meta($test_id, 'lb_test_ma_de', true);
                     $post_status = get_post_status($test_id);
 
-                    $status_html = '';
-                    $submitter_html = '<td></td>';
-                    $end_time_html = '<td></td>';
-                    $action_html = '<td></td>';
+                    $status_slug = 'nodata';
+                    $status_text = 'Không có dữ liệu';
+                    $submitter_html = '<td>—</td>';
+                    $end_time_html = '<td>—</td>';
+                    $action_html = '<td>—</td>';
+                    $submission_id_for_delete = null;
                     
                     if ($post_status === 'publish') {
-                        $status_html = '<td><span class="status-dot status-ready"></span>Sẵn sàng</td>';
+                        $status_slug = 'ready';
+                        $status_text = 'Sẵn sàng';
                     } else { // draft status
                         $submission = $wpdb->get_row($wpdb->prepare(
-                            "SELECT * FROM $submissions_table WHERE test_id = %d",
+                            "SELECT submission_id, submitter_name, end_time, status FROM $submissions_table WHERE test_id = %d",
                             $test_id
                         ));
 
                         if ($submission) {
-                            $submitter_html = '<td>' . esc_html($submission->submitter_name) . '</td>';
-                            $end_time_html = '<td>' . date('d/m/Y H:i', strtotime($submission->end_time)) . '</td>';
+                            $submission_id_for_delete = $submission->submission_id;
+                            $submitter_html = '<td><strong>' . esc_html($submission->submitter_name) . '</strong></td>';
+                            $end_time_html = '<td>' . wp_date('d/m/Y, H:i', strtotime($submission->end_time)) . '</td>';
                             $view_url = add_query_arg('submission_id', $submission->submission_id, $grader_dashboard_url);
 
                             if ($submission->status === 'graded') {
-                                $status_html = '<td><span class="status-dot status-graded"></span>Đã chấm</td>';
-                                $action_html = '<td><a href="' . esc_url($view_url) . '">Xem lại</a></td>';
+                                $status_slug = 'graded';
+                                $status_text = 'Đã chấm';
+                                $action_html = '<td><a href="' . esc_url($view_url) . '" class="gdv-action-link">Xem lại</a></td>';
                             } else {
-                                $status_html = '<td><span class="status-dot status-submitted"></span>Đã có người làm</td>';
-                                $action_html = '<td><a href="' . esc_url($view_url) . '"><strong>Đi đến chấm bài</strong></a></td>';
+                                $status_slug = 'submitted';
+                                $status_text = 'Cần chấm';
+                                $action_html = '<td><a href="' . esc_url($view_url) . '" class="gdv-action-link"><strong>Chấm bài</strong></a></td>';
                             }
-                        } else {
-                            $status_html = '<td><span class="status-dot"></span>Không có dữ liệu</td>';
                         }
                     }
                     ?>
-                    <tr>
-                        <td><?php the_title(); ?></td>
-                        <td>
-                            <code><?php echo esc_html($ma_de); ?></code>
-                            <button class="copy-ma-de" data-code="<?php echo esc_attr($ma_de); ?>" title="Chép mã đề">📋</button>
-                        </td>
-                        <?php echo $status_html; ?>
+                    <tr data-status="<?php echo $status_slug; ?>">
+                        <td><input type="checkbox" class="gdv-row-checkbox" value="<?php echo esc_attr($submission_id_for_delete); ?>"></td>
+                        <td><strong><?php the_title(); ?></strong></td>
+                        <td><code><?php echo esc_html($ma_de); ?></code></td>
+                        <td><span class="gdv-status gdv-status--<?php echo $status_slug; ?>"><?php echo $status_text; ?></span></td>
                         <?php echo $submitter_html; ?>
                         <?php echo $end_time_html; ?>
                         <?php echo $action_html; ?>
@@ -150,7 +464,7 @@ function lb_render_ma_de_list_table($grader_dashboard_url) {
         </table>
         <?php
     } else {
-        echo '<p>Chưa có bài kiểm tra nào được tạo.</p>';
+        echo '<p style="padding: 20px; text-align: center;">Chưa có bài kiểm tra nào được tạo.</p>';
     }
 }
 ?>

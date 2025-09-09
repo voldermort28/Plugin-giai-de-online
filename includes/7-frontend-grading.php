@@ -74,9 +74,103 @@ add_action('template_redirect', 'lb_test_handle_frontend_grader_actions');
 function lb_test_render_grader_dashboard_shortcode() {
     if (!current_user_can('grade_submissions')) return '<p>Bạn không có quyền truy cập trang này.</p>';
     ob_start();
+    ?>
+    <style>
+        :root {
+            --gdv-bg: #f4f7fe;
+            --gdv-white: #ffffff;
+            --gdv-primary: #4a43ec;
+            --gdv-text-primary: #1a214f;
+            --gdv-text-secondary: #7a859f;
+            --gdv-border: #e5e9f2;
+            --gdv-danger-text: #dc3545;
+        }
+        .gdv-container {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--gdv-bg);
+            padding: 20px;
+            border-radius: 16px;
+        }
+        .gdv-main-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--gdv-border);
+        }
+        .gdv-main-tab {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: var(--gdv-text-secondary);
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            margin-bottom: -1px;
+        }
+        .gdv-main-tab.active, .gdv-main-tab:hover {
+            color: var(--gdv-primary);
+            border-bottom-color: var(--gdv-primary);
+        }
+        .gdv-table-wrapper {
+            background-color: var(--gdv-white);
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            -webkit-overflow-scrolling: touch;
+        }
+        .gdv-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .gdv-table th, .gdv-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--gdv-border);
+            color: var(--gdv-text-secondary);
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .gdv-table th {
+            color: var(--gdv-text-primary);
+            font-weight: 600;
+        }
+        .gdv-table tbody tr:hover {
+            background-color: #fafbff;
+        }
+        .gdv-table td strong {
+            color: var(--gdv-text-primary);
+            font-weight: 500;
+        }
+        .gdv-action-link {
+            color: var(--gdv-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .notice {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .notice-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .notice-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+    </style>
+    <div class="gdv-container">
+        <div class="gdv-main-tabs">
+            <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab active">Chấm Bài & Lịch Sử</a>
+            <a href="<?php echo esc_url(get_site_url(null, '/code/')); ?>" class="gdv-main-tab">Danh Sách Đề Thi</a>
+        </div>
+    <?php
     if (isset($_GET['grading_status'])) echo '<div class="notice notice-success">Chấm bài thi #' . intval($_GET['graded_id']) . ' thành công!</div>';
     if (isset($_GET['delete_status'])) echo '<div class="notice notice-error">Đã xóa bài thi thành công!</div>';
-    echo '<div class="grader-wrapper">';
+    
     if (isset($_GET['submission_id']) && is_numeric($_GET['submission_id'])) {
         render_single_submission_grading_form(intval($_GET['submission_id']));
     } else {
@@ -96,28 +190,41 @@ function render_grader_dashboard_tables() {
     $pending_submissions = $wpdb->get_results("SELECT s.*, p.post_title FROM $submissions_table s LEFT JOIN $posts_table p ON s.test_id = p.ID WHERE s.status = 'submitted' ORDER BY s.end_time DESC");
     echo '<h2>Các bài thi cần chấm</h2>';
     if ($pending_submissions) {
-        echo '<table class="grader-table"><thead><tr><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Hành động</th></tr></thead><tbody>';
+        echo '<div class="gdv-table-wrapper"><table class="gdv-table"><thead><tr><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Hành động</th></tr></thead><tbody>';
         foreach ($pending_submissions as $sub) {
             $grading_url = add_query_arg('submission_id', $sub->submission_id, $page_url);
             $delete_nonce = wp_create_nonce('lb_test_delete_submission_' . $sub->submission_id);
             $delete_url = add_query_arg(['action' => 'delete_submission', 'submission_id' => $sub->submission_id, '_wpnonce' => $delete_nonce], $page_url);
-            echo '<tr><td>' . $sub->submission_id . '</td><td>' . esc_html($sub->post_title) . '</td><td><strong>' . esc_html($sub->submitter_name) . '</strong></td><td>' . date('d/m/Y H:i', strtotime($sub->end_time)) . '</td><td><a href="' . esc_url($grading_url) . '" class="button">Chấm bài</a> <a href="' . esc_url($delete_url) . '" class="button delete-button" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td></tr>';
+            echo '<tr>
+                    <td>#' . $sub->submission_id . '</td>
+                    <td><strong>' . esc_html($sub->post_title) . '</strong></td>
+                    <td><strong>' . esc_html($sub->submitter_name) . '</strong></td>
+                    <td>' . wp_date('d/m/Y, H:i', strtotime($sub->end_time)) . '</td>
+                    <td><a href="' . esc_url($grading_url) . '" class="gdv-action-link"><strong>Chấm bài</strong></a> <a href="' . esc_url($delete_url) . '" class="gdv-action-link" style="color: var(--gdv-danger-text);" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td>
+                  </tr>';
         }
-        echo '</tbody></table>';
+        echo '</tbody></table></div>';
     } else { echo '<p>Không có bài thi nào cần chấm.</p>'; }
 
     $graded_submissions = $wpdb->get_results("SELECT s.*, p.post_title FROM $submissions_table s LEFT JOIN $posts_table p ON s.test_id = p.ID WHERE s.status = 'graded' ORDER BY s.end_time DESC");
     echo '<h2 style="margin-top: 40px;">Lịch sử chấm bài</h2>';
     if ($graded_submissions) {
-        echo '<table class="grader-table"><thead><tr><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Điểm số</th><th>Hành động</th></tr></thead><tbody>';
+        echo '<div class="gdv-table-wrapper"><table class="gdv-table"><thead><tr><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Điểm số</th><th>Hành động</th></tr></thead><tbody>';
         foreach ($graded_submissions as $sub) {
             $total_questions_for_sub = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}lb_test_answers WHERE submission_id = %d", $sub->submission_id));
             $review_url = add_query_arg('submission_id', $sub->submission_id, $page_url);
             $delete_nonce = wp_create_nonce('lb_test_delete_submission_' . $sub->submission_id);
             $delete_url = add_query_arg(['action' => 'delete_submission', 'submission_id' => $sub->submission_id, '_wpnonce' => $delete_nonce], $page_url);
-            echo '<tr><td>' . $sub->submission_id . '</td><td>' . esc_html($sub->post_title) . '</td><td><strong>' . esc_html($sub->submitter_name) . '</strong></td><td>' . date('d/m/Y H:i', strtotime($sub->end_time)) . '</td><td><strong><a href="' . esc_url($review_url) . '">' . intval($sub->score) . '/' . $total_questions_for_sub . '</a></strong></td><td><a href="' . esc_url($review_url) . '" class="button review-button">Xem lại</a> <a href="' . esc_url($delete_url) . '" class="button delete-button" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td></tr>';
+            echo '<tr>
+                    <td>#' . $sub->submission_id . '</td>
+                    <td><strong>' . esc_html($sub->post_title) . '</strong></td>
+                    <td><strong>' . esc_html($sub->submitter_name) . '</strong></td>
+                    <td>' . wp_date('d/m/Y, H:i', strtotime($sub->end_time)) . '</td>
+                    <td><strong><a href="' . esc_url($review_url) . '" class="gdv-action-link">' . intval($sub->score) . '/' . $total_questions_for_sub . '</a></strong></td>
+                    <td><a href="' . esc_url($review_url) . '" class="gdv-action-link">Xem lại</a> <a href="' . esc_url($delete_url) . '" class="gdv-action-link" style="color: var(--gdv-danger-text);" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td>
+                  </tr>';
         }
-        echo '</tbody></table>';
+        echo '</tbody></table></div>';
     } else { echo '<p>Chưa có bài thi nào được chấm.</p>'; }
 }
 
