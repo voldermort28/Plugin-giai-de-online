@@ -287,3 +287,19 @@
     border-color: #bd2130;
     color: #fff;
 }
+
+/* ==========================================================================
+   CSS Bổ sung cho Giao diện Chấm bài
+   ========================================================================== */
+
+/* Màu Vàng cho câu trả lời đang chờ chấm (tự luận) */
+.answer-box.student-answer.pending-answer {
+    background-color: #fffde7; /* Màu vàng nhạt */
+    border-color: #fbc02d;
+}
+
+/* Màu Đỏ cho khung đáp án khi thí sinh trả lời sai */
+.answer-box.incorrect-answer {
+    background-color: #f8d7da; /* Màu đỏ nhạt */
+    border-color: #f5c6cb;
+}
