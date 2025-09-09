@@ -28,10 +28,9 @@ add_shortcode('lam_bai_kiem_tra', function() {
             $test_query->the_post();
             $test_id = get_the_ID();
             
-            // KIỂM TRA TÊN THÍ SINH
             if (empty($submitter_name)) {
                 // Nếu chưa có tên, hiển thị lại form ban đầu với thông báo lỗi
-                display_initial_form(true); // true = có lỗi
+                display_initial_form(true); 
             } else {
                 // Nếu có đủ thông tin, hiển thị bài thi
                 display_test_content($test_id, $ma_de, $submitter_name);
@@ -40,7 +39,7 @@ add_shortcode('lam_bai_kiem_tra', function() {
 
         } else {
             // Nếu mã đề sai, hiển thị lại form với thông báo lỗi
-            display_initial_form(false, true); // false = không có lỗi tên, true = có lỗi mã đề
+            display_initial_form(false, true);
         }
 
     } else {
@@ -51,9 +50,6 @@ add_shortcode('lam_bai_kiem_tra', function() {
     return ob_get_clean();
 });
 
-/**
- * Hàm hiển thị form nhập liệu ban đầu
- */
 function display_initial_form($name_error = false, $code_error = false) {
     ?>
     <div class="lb-test-code-input-form">
@@ -64,7 +60,7 @@ function display_initial_form($name_error = false, $code_error = false) {
                 <p class="error-message">Mã đề thi không hợp lệ hoặc đã được sử dụng.</p>
             <?php endif; ?>
 
-            <?php if (!is_user_logged_in()): // Chỉ hiển thị ô nhập tên nếu chưa đăng nhập ?>
+            <?php if (!is_user_logged_in()): ?>
                 <label for="submitter_name">Nhập tên của bạn:</label>
                 <input type="text" name="submitter_name" id="submitter_name" required>
                 <?php if ($name_error): ?>
@@ -78,9 +74,6 @@ function display_initial_form($name_error = false, $code_error = false) {
     <?php
 }
 
-/**
- * Hàm hiển thị nội dung bài thi
- */
 function display_test_content($test_id, $ma_de, $submitter_name) {
     $thoi_gian = get_post_meta($test_id, 'lb_test_thoi_gian', true);
     $question_ids = get_post_meta($test_id, 'lb_test_danh_sach_cau_hoi', true);
@@ -105,24 +98,27 @@ function display_test_content($test_id, $ma_de, $submitter_name) {
             $question = get_post($q_id);
             if ($question) {
                 $loai_cau_hoi = get_post_meta($q_id, 'lb_test_loai_cau_hoi', true);
-                $lua_chon = get_post_meta($q_id, 'lb_test_lua_chon', true);
-                $lua_chon = is_array($lua_chon) ? $lua_chon : [];
 
                 echo '<div class="lb-test-question-item">';
-                echo '<h4>Câu ' . $count . ': ' . esc_html($question->post_content) . '</h4>';
+                echo '<h4>Câu ' . $count++ . ': ' . esc_html($question->post_content) . '</h4>';
+                
+                // Luôn gửi kèm loại câu hỏi để backend xử lý
                 echo '<input type="hidden" name="answers[' . $q_id . '][type]" value="' . esc_attr($loai_cau_hoi) . '">';
                 
-                if ($loai_cau_hoi == 'trac_nghiem' && !empty($lua_chon)) {
-                    foreach ($lua_chon as $char => $text) {
-                        if (!empty($text)) {
-                            echo '<label><input type="radio" name="answers[' . $q_id . '][answer]" value="' . esc_attr($char) . '"> ' . esc_html($char) . '. ' . esc_html($text) . '</label>';
+                if ($loai_cau_hoi == 'trac_nghiem') {
+                    $lua_chon = get_post_meta($q_id, 'lb_test_lua_chon', true);
+                    $lua_chon = is_array($lua_chon) ? $lua_chon : [];
+                    if (!empty($lua_chon)) {
+                        foreach ($lua_chon as $char => $text) {
+                            if (!empty($text)) {
+                                echo '<label><input type="radio" name="answers[' . $q_id . '][answer]" value="' . esc_attr($char) . '"> ' . esc_html($char) . '. ' . esc_html($text) . '</label>';
+                            }
                         }
                     }
                 } elseif ($loai_cau_hoi == 'tu_luan') {
                     echo '<textarea name="answers[' . $q_id . '][answer]" rows="5" placeholder="Nhập câu trả lời của bạn"></textarea>';
                 }
                 echo '</div>';
-                $count++;
             }
         }
         echo '<button type="submit" id="submit-test-btn">Nộp bài</button>';

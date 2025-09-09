@@ -12,22 +12,18 @@ function lb_test_handle_submission() {
 
     global $wpdb;
     $test_id = intval($_POST['test_id']);
-    $user_id = get_current_user_id(); // Sẽ là 0 nếu người dùng chưa đăng nhập
-    $submitter_name = sanitize_text_field($_POST['submitter_name'] ?? 'Ẩn danh'); // Lấy tên thí sinh
+    $user_id = get_current_user_id();
+    $submitter_name = sanitize_text_field($_POST['submitter_name'] ?? 'Ẩn danh');
 
-    // Ghi nhận bài làm vào bảng submissions
-    $wpdb->insert(
-        $wpdb->prefix . 'lb_test_submissions',
-        [
-            'test_id' => $test_id,
-            'user_id' => $user_id,
-            'submitter_name' => $submitter_name, // LƯU TÊN THÍ SINH VÀO CỘT MỚI
-            'ma_de' => sanitize_text_field($_POST['ma_de']),
-            'start_time' => current_time('mysql'),
-            'end_time' => current_time('mysql'),
-            'status' => 'submitted',
-        ]
-    );
+    $wpdb->insert($wpdb->prefix . 'lb_test_submissions', [
+        'test_id' => $test_id,
+        'user_id' => $user_id,
+        'submitter_name' => $submitter_name,
+        'ma_de' => sanitize_text_field($_POST['ma_de']),
+        'start_time' => current_time('mysql'),
+        'end_time' => current_time('mysql'),
+        'status' => 'submitted',
+    ]);
     $submission_id = $wpdb->insert_id;
 
     if (!$submission_id) {
@@ -35,39 +31,38 @@ function lb_test_handle_submission() {
         return;
     }
     
-    // Lưu các câu trả lời
-    $answers_to_insert = [];
+    // SỬA LỖI: Xử lý đúng cấu trúc dữ liệu đa chiều
     $answers = $_POST['answers'] ?? [];
     foreach ($answers as $q_id => $data) {
         $q_id = intval($q_id);
-        $user_answer = sanitize_text_field($data['answer'] ?? '');
-        $question_type = sanitize_text_field($data['type'] ?? '');
         
-        $is_correct = 2; // Mặc định là 'chưa chấm'
-        if ($question_type === 'trac_nghiem') {
+        // Lấy câu trả lời và loại câu hỏi từ mảng $data
+        $user_answer = sanitize_textarea_field($data['answer'] ?? '');
+        $loai_cau_hoi = sanitize_text_field($data['type'] ?? '');
+        
+        $is_correct = 2; // Mặc định là 'chờ chấm' cho câu tự luận
+
+        if ($loai_cau_hoi === 'trac_nghiem') {
             $correct_answer = get_post_meta($q_id, 'lb_test_dap_an', true);
-            if ($user_answer === $correct_answer) {
-                $is_correct = 1; // Đúng
-            } else {
-                $is_correct = 0; // Sai
-            }
+            
+            // Logic so sánh mạnh hơn để tránh lỗi ký tự ẩn
+            $clean_user_answer = preg_replace('/[^A-Z]/', '', strtoupper($user_answer));
+            $clean_correct_answer = preg_replace('/[^A-Z]/', '', strtoupper($correct_answer));
+            
+            $is_correct = ($clean_user_answer == $clean_correct_answer) ? 1 : 0;
         }
 
-        $answers_to_insert[] = [
-            'submission_id' => $submission_id,
-            'question_id' => $q_id,
-            'user_answer' => $user_answer,
-            'is_correct' => $is_correct,
-        ];
+        $wpdb->insert(
+            $wpdb->prefix . 'lb_test_answers',
+            [
+                'submission_id' => $submission_id,
+                'question_id' => $q_id,
+                'user_answer' => $user_answer,
+                'is_correct' => $is_correct,
+            ]
+        );
     }
 
-    if (!empty($answers_to_insert)) {
-        foreach ($answers_to_insert as $answer_data) {
-            $wpdb->insert($wpdb->prefix . 'lb_test_answers', $answer_data);
-        }
-    }
-
-    // Chuyển bài kiểm tra về trạng thái 'draft' (bản nháp) sau khi nộp
     wp_update_post(array('ID' => $test_id, 'post_status' => 'draft'));
 
     wp_send_json_success(['message' => 'Nộp bài thành công!']);
