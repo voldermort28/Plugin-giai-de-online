@@ -145,6 +145,39 @@ function lb_test_render_grader_dashboard_shortcode() {
             text-decoration: none;
             font-weight: 500;
         }
+        .gdv-bulk-actions {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--gdv-text-primary);
+            color: var(--gdv-white);
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: bottom 0.3s ease-in-out;
+            z-index: 1000;
+        }
+        .gdv-bulk-actions.visible {
+            bottom: 20px;
+        }
+        .gdv-bulk-actions button {
+            background: transparent;
+            border: none;
+            color: var(--gdv-white);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .gdv-bulk-actions button:hover { background-color: rgba(255,255,255,0.1); }
+        .gdv-bulk-actions .delete-btn { background-color: var(--gdv-danger-bg); color: var(--gdv-danger-text); }
+        .gdv-bulk-actions .delete-btn:hover { background-color: #fbd0d4; }
         .notice {
             padding: 15px;
             margin-bottom: 20px;
@@ -176,6 +209,81 @@ function lb_test_render_grader_dashboard_shortcode() {
     } else {
         render_grader_dashboard_tables();
     }
+    ?>
+    <div id="gdv-bulk-actions" class="gdv-bulk-actions">
+        <span id="gdv-selected-count">0 items selected</span>
+        <button id="gdv-bulk-delete-btn" class="delete-btn">Delete</button>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAllCheckboxes = document.querySelectorAll('.gdv-select-all');
+        const rowCheckboxes = document.querySelectorAll('.gdv-row-checkbox');
+        const bulkActionsBar = document.getElementById('gdv-bulk-actions');
+        const selectedCountSpan = document.getElementById('gdv-selected-count');
+        const bulkDeleteBtn = document.getElementById('gdv-bulk-delete-btn');
+
+        function updateBulkActionsBar() {
+            const selectedCheckboxes = document.querySelectorAll('.gdv-row-checkbox:checked');
+            const count = selectedCheckboxes.length;
+            
+            if (count > 0) {
+                selectedCountSpan.textContent = `${count} mục đã chọn`;
+                bulkActionsBar.classList.add('visible');
+            } else {
+                bulkActionsBar.classList.remove('visible');
+            }
+            selectAllCheckboxes.forEach(box => {
+                box.checked = (count > 0 && count === rowCheckboxes.length);
+            });
+        }
+
+        selectAllCheckboxes.forEach(box => {
+            box.addEventListener('change', function() {
+                const tableId = this.getAttribute('data-table');
+                document.querySelectorAll(`#${tableId} .gdv-row-checkbox`).forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateBulkActionsBar();
+            });
+        });
+
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateBulkActionsBar);
+        });
+
+        bulkDeleteBtn.addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.gdv-row-checkbox:checked')).map(cb => cb.value);
+            if (selectedIds.length === 0) {
+                alert('Vui lòng chọn ít nhất một bài làm để xóa.');
+                return;
+            }
+            if (confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} bài làm đã chọn? Đề thi gốc sẽ được chuyển về trạng thái "Sẵn sàng".`)) {
+                 jQuery.ajax({
+                    url: lb_test_ajax.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'bulk_delete_items',
+                        nonce: lb_test_ajax.bulk_delete_nonce,
+                        item_ids: selectedIds,
+                        delete_type: 'submission'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.data.message);
+                            window.location.reload();
+                        } else {
+                            alert('Lỗi: ' + response.data.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Đã xảy ra lỗi không xác định. Vui lòng thử lại.');
+                    }
+                });
+            }
+        });
+    });
+    </script>
+    <?php
     echo '</div>';
     return ob_get_clean();
 }
@@ -190,12 +298,13 @@ function render_grader_dashboard_tables() {
     $pending_submissions = $wpdb->get_results("SELECT s.*, p.post_title FROM $submissions_table s LEFT JOIN $posts_table p ON s.test_id = p.ID WHERE s.status = 'submitted' ORDER BY s.end_time DESC");
     echo '<h2>Các bài thi cần chấm</h2>';
     if ($pending_submissions) {
-        echo '<div class="gdv-table-wrapper"><table class="gdv-table"><thead><tr><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Hành động</th></tr></thead><tbody>';
+        echo '<div class="gdv-table-wrapper"><table class="gdv-table" id="pending-table"><thead><tr><th><input type="checkbox" class="gdv-select-all" data-table="pending-table"></th><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Hành động</th></tr></thead><tbody>';
         foreach ($pending_submissions as $sub) {
             $grading_url = add_query_arg('submission_id', $sub->submission_id, $page_url);
             $delete_nonce = wp_create_nonce('lb_test_delete_submission_' . $sub->submission_id);
             $delete_url = add_query_arg(['action' => 'delete_submission', 'submission_id' => $sub->submission_id, '_wpnonce' => $delete_nonce], $page_url);
             echo '<tr>
+                    <td><input type="checkbox" class="gdv-row-checkbox" value="' . esc_attr($sub->submission_id) . '"></td>
                     <td>#' . $sub->submission_id . '</td>
                     <td><strong>' . esc_html($sub->post_title) . '</strong></td>
                     <td><strong>' . esc_html($sub->submitter_name) . '</strong></td>
@@ -209,13 +318,14 @@ function render_grader_dashboard_tables() {
     $graded_submissions = $wpdb->get_results("SELECT s.*, p.post_title FROM $submissions_table s LEFT JOIN $posts_table p ON s.test_id = p.ID WHERE s.status = 'graded' ORDER BY s.end_time DESC");
     echo '<h2 style="margin-top: 40px;">Lịch sử chấm bài</h2>';
     if ($graded_submissions) {
-        echo '<div class="gdv-table-wrapper"><table class="gdv-table"><thead><tr><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Điểm số</th><th>Hành động</th></tr></thead><tbody>';
+        echo '<div class="gdv-table-wrapper"><table class="gdv-table" id="graded-table"><thead><tr><th><input type="checkbox" class="gdv-select-all" data-table="graded-table"></th><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Điểm số</th><th>Hành động</th></tr></thead><tbody>';
         foreach ($graded_submissions as $sub) {
             $total_questions_for_sub = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}lb_test_answers WHERE submission_id = %d", $sub->submission_id));
             $review_url = add_query_arg('submission_id', $sub->submission_id, $page_url);
             $delete_nonce = wp_create_nonce('lb_test_delete_submission_' . $sub->submission_id);
             $delete_url = add_query_arg(['action' => 'delete_submission', 'submission_id' => $sub->submission_id, '_wpnonce' => $delete_nonce], $page_url);
             echo '<tr>
+                    <td><input type="checkbox" class="gdv-row-checkbox" value="' . esc_attr($sub->submission_id) . '"></td>
                     <td>#' . $sub->submission_id . '</td>
                     <td><strong>' . esc_html($sub->post_title) . '</strong></td>
                     <td><strong>' . esc_html($sub->submitter_name) . '</strong></td>

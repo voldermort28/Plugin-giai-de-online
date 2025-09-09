@@ -92,7 +92,8 @@ function lb_test_enqueue_scripts() {
     wp_enqueue_script('lb-test-main-js', LB_TEST_PLUGIN_URL . 'assets/js/main.js', array('jquery'), '1.0.1', true);
     wp_localize_script('lb-test-main-js', 'lb_test_ajax', array(
         'ajax_url' => admin_url('admin-ajax.php'),
-        'grading_nonce' => wp_create_nonce('lb_test_grading_nonce')
+        'grading_nonce' => wp_create_nonce('lb_test_grading_nonce'),
+        'bulk_delete_nonce' => wp_create_nonce('lb_test_bulk_delete_nonce')
     ));
 }
 add_action('wp_enqueue_scripts', 'lb_test_enqueue_scripts');

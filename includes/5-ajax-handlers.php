@@ -67,3 +67,84 @@ function lb_test_handle_submission() {
 
     wp_send_json_success(['message' => 'Nộp bài thành công!']);
 }
+
+/**
+ * ===================================================================
+ * DỌN DẸP DỮ LIỆU KHI XÓA ĐỀ THI
+ * ===================================================================
+ */
+function lb_cleanup_submissions_on_test_delete($post_id) {
+    global $wpdb;
+    if (get_post_type($post_id) !== 'dethi_baikiemtra') {
+        return;
+    }
+    
+    $submissions_table = $wpdb->prefix . 'lb_test_submissions';
+    $answers_table = $wpdb->prefix . 'lb_test_answers';
+
+    // Tìm tất cả các submission_id liên quan đến test_id này
+    $submission_ids = $wpdb->get_col($wpdb->prepare("SELECT submission_id FROM $submissions_table WHERE test_id = %d", $post_id));
+
+    if (!empty($submission_ids)) {
+        // Xóa tất cả các câu trả lời liên quan
+        $wpdb->query("DELETE FROM $answers_table WHERE submission_id IN (" . implode(',', $submission_ids) . ")");
+        // Xóa tất cả các bài làm liên quan
+        $wpdb->query("DELETE FROM $submissions_table WHERE test_id = $post_id");
+    }
+}
+add_action('before_delete_post', 'lb_cleanup_submissions_on_test_delete');
+
+
+/**
+ * ===================================================================
+ * AJAX HANDLER FOR BULK DELETION
+ * ===================================================================
+ */
+add_action('wp_ajax_bulk_delete_items', 'lb_handle_bulk_delete');
+
+function lb_handle_bulk_delete() {
+    check_ajax_referer('lb_test_bulk_delete_nonce', 'nonce');
+
+    if (!current_user_can('grade_submissions')) {
+        wp_send_json_error(['message' => 'Bạn không có quyền thực hiện hành động này.']);
+        return;
+    }
+
+    global $wpdb;
+    $item_ids = isset($_POST['item_ids']) ? array_map('intval', $_POST['item_ids']) : [];
+    $delete_type = sanitize_text_field($_POST['delete_type']);
+
+    if (empty($item_ids) || empty($delete_type)) {
+        wp_send_json_error(['message' => 'Dữ liệu không hợp lệ.']);
+        return;
+    }
+
+    if ($delete_type === 'submission') {
+        $submissions_table = $wpdb->prefix . 'lb_test_submissions';
+        $answers_table = $wpdb->prefix . 'lb_test_answers';
+
+        foreach ($item_ids as $submission_id) {
+            // Lấy test_id trước khi xóa để cập nhật lại trạng thái
+            $test_id = $wpdb->get_var($wpdb->prepare("SELECT test_id FROM $submissions_table WHERE submission_id = %d", $submission_id));
+
+            // Xóa câu trả lời và bài làm
+            $wpdb->delete($answers_table, ['submission_id' => $submission_id]);
+            $wpdb->delete($submissions_table, ['submission_id' => $submission_id]);
+
+            // Cập nhật lại trạng thái của đề thi thành 'publish' (Sẵn sàng)
+            if ($test_id) {
+                wp_update_post(['ID' => $test_id, 'post_status' => 'publish']);
+            }
+        }
+        wp_send_json_success(['message' => 'Đã xóa các bài làm đã chọn và đặt lại trạng thái đề thi.']);
+
+    } elseif ($delete_type === 'test') {
+        foreach ($item_ids as $test_id) {
+            wp_delete_post($test_id, true); // true để xóa vĩnh viễn
+        }
+        wp_send_json_success(['message' => 'Đã xóa vĩnh viễn các đề thi đã chọn.']);
+
+    } else {
+        wp_send_json_error(['message' => 'Loại xóa không được hỗ trợ.']);
+    }
+}

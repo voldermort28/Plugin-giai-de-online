@@ -353,13 +353,31 @@ function lb_ma_de_dashboard_shortcode() {
         bulkDeleteBtn.addEventListener('click', function() {
             const selectedIds = Array.from(document.querySelectorAll('.gdv-row-checkbox:checked')).map(cb => cb.value);
             if (selectedIds.length === 0) {
-                alert('Vui lòng chọn ít nhất một bài thi để xóa.');
+                alert('Vui lòng chọn ít nhất một đề thi để xóa.');
                 return;
             }
-            if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn ${selectedIds.length} bài thi đã chọn? Hành động này không thể hoàn tác.`)) {
-                // Placeholder for future AJAX deletion
-                console.log('Deleting submission IDs:', selectedIds);
-                alert('Chức năng xóa hàng loạt đang được phát triển.');
+            if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn ${selectedIds.length} đề thi đã chọn? Tất cả bài làm liên quan cũng sẽ bị xóa. Hành động này không thể hoàn tác.`)) {
+                jQuery.ajax({
+                    url: lb_test_ajax.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'bulk_delete_items',
+                        nonce: lb_test_ajax.bulk_delete_nonce,
+                        item_ids: selectedIds,
+                        delete_type: 'test'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.data.message);
+                            window.location.reload();
+                        } else {
+                            alert('Lỗi: ' + response.data.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Đã xảy ra lỗi không xác định. Vui lòng thử lại.');
+                    }
+                });
             }
         });
 
@@ -448,7 +466,7 @@ function lb_render_ma_de_list_table($grader_dashboard_url, $tests_query) {
                     }
                     ?>
                     <tr data-status="<?php echo $status_slug; ?>">
-                        <td><input type="checkbox" class="gdv-row-checkbox" value="<?php echo esc_attr($submission_id_for_delete); ?>"></td>
+                        <td><input type="checkbox" class="gdv-row-checkbox" value="<?php echo esc_attr($test_id); ?>"></td>
                         <td><strong><?php the_title(); ?></strong></td>
                         <td><code><?php echo esc_html($ma_de); ?></code></td>
                         <td><span class="gdv-status gdv-status--<?php echo $status_slug; ?>"><?php echo $status_text; ?></span></td>
