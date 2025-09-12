@@ -68,38 +68,11 @@ function lb_render_leaderboard_page() {
     }
 
     ?>
-    <style>
-        /* Re-using styles from grader dashboard for consistency */
+    <style> /* Chỉ giữ lại các style đặc thù cho trang này */
         .gdv-rank { font-size: 1.2em; font-weight: bold; text-align: center; }
         .gdv-rank-1 { color: #d4af37; } /* Gold */
         .gdv-rank-2 { color: #c0c0c0; } /* Silver */
         .gdv-rank-3 { color: #cd7f32; } /* Bronze */
-        .gdv-filter-form {
-            background-color: var(--gdv-white);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .gdv-filter-form label { font-weight: 500; color: var(--gdv-text-primary); }
-        .gdv-filter-form select {
-            min-width: 250px;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--gdv-border);
-        }
-        .gdv-filter-form button {
-            background-color: var(--gdv-primary);
-            color: var(--gdv-white);
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-        }
     </style>
 
     <div class="gdv-container">
@@ -109,20 +82,25 @@ function lb_render_leaderboard_page() {
             <a href="<?php echo esc_url(get_site_url(null, '/bxh/')); ?>" class="gdv-main-tab active">Bảng Xếp Hạng</a>
         </div>
 
-        <h1>Bảng Xếp Hạng</h1>
+        <div class="gdv-header">
+            <h1>Bảng xếp hạng</h1>
+            <button class="gdv-button" style="background-color: var(--gdv-status-ready-text); opacity: 0.5;" disabled>Xuất Excel</button>
+        </div>
 
-        <form method="get" action="" class="gdv-filter-form">
-            <label for="contest_filter">Chọn cuộc thi:</label>
-            <select name="contest_filter" id="contest_filter">
-                <option value="">-- Vui lòng chọn --</option>
-                <?php foreach ($contest_names as $name) : ?>
-                    <option value="<?php echo esc_attr($name); ?>" <?php selected($current_contest, $name); ?>>
-                        <?php echo esc_html($name); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <button type="submit">Xem Bảng Xếp Hạng</button>
-        </form>
+        <div class="gdv-toolbar">
+            <form method="get" action="" class="gdv-filter-form">
+                <label for="contest_filter">Chọn cuộc thi:</label>
+                <select name="contest_filter" id="contest_filter">
+                    <option value="">-- Vui lòng chọn --</option>
+                    <?php foreach ($contest_names as $name) : ?>
+                        <option value="<?php echo esc_attr($name); ?>" <?php selected($current_contest, $name); ?>>
+                            <?php echo esc_html($name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="gdv-button">Xem</button>
+            </form>
+        </div>
 
         <?php if (!empty($current_contest)) : ?>
             <div class="gdv-table-wrapper">

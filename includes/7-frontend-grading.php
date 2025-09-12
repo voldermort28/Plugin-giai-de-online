@@ -83,143 +83,6 @@ function lb_test_render_grader_dashboard_shortcode() {
     if (!current_user_can('grade_submissions')) return '<p>Bạn không có quyền truy cập trang này.</p>';
     ob_start();
     ?>
-    <style>
-        :root {
-            --gdv-bg: #f4f7fe;
-            --gdv-white: #ffffff;
-            --gdv-primary: #4a43ec;
-            --gdv-text-primary: #1a214f;
-            --gdv-text-secondary: #7a859f;
-            --gdv-border: #e5e9f2;
-            --gdv-danger-text: #dc3545;
-        }
-        .gdv-button {
-            display: inline-block;
-            background-color: var(--gdv-primary);
-            color: var(--gdv-white) !important;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .gdv-button:hover {
-            background-color: #3a33c9; /* a bit darker */
-            color: var(--gdv-white);
-        }
-
-        .gdv-container {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--gdv-bg);
-            padding: 20px;
-            border-radius: 16px;
-        }
-        .gdv-main-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--gdv-border);
-        }
-        .gdv-main-tab {
-            padding: 10px 20px;
-            text-decoration: none;
-            color: var(--gdv-text-secondary);
-            font-weight: 500;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-            margin-bottom: -1px;
-        }
-        .gdv-main-tab.active, .gdv-main-tab:hover {
-            color: var(--gdv-primary);
-            border-bottom-color: var(--gdv-primary);
-        }
-        .gdv-table-wrapper {
-            background-color: var(--gdv-white);
-            border-radius: 12px;
-            overflow-x: auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            -webkit-overflow-scrolling: touch;
-        }
-        .gdv-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .gdv-table th, .gdv-table td {
-            padding: 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--gdv-border);
-            color: var(--gdv-text-secondary);
-            font-size: 14px;
-            white-space: nowrap;
-        }
-        .gdv-table th {
-            color: var(--gdv-text-primary);
-            font-weight: 600;
-        }
-        .gdv-table tbody tr:hover {
-            background-color: #fafbff;
-        }
-        .gdv-table td strong {
-            color: var(--gdv-text-primary);
-            font-weight: 500;
-        }
-        .gdv-action-link {
-            color: var(--gdv-primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .gdv-bulk-actions {
-            position: fixed;
-            bottom: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--gdv-text-primary);
-            color: var(--gdv-white);
-            padding: 12px 24px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: bottom 0.3s ease-in-out;
-            z-index: 1000;
-        }
-        .gdv-bulk-actions.visible {
-            bottom: 20px;
-        }
-        .gdv-bulk-actions button {
-            background: transparent;
-            border: none;
-            color: var(--gdv-white);
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: background-color 0.2s;
-        }
-        .gdv-bulk-actions button:hover { background-color: rgba(255,255,255,0.1); }
-        .gdv-bulk-actions .delete-btn { background-color: var(--gdv-danger-bg); color: var(--gdv-danger-text); }
-        .gdv-bulk-actions .delete-btn:hover { background-color: #fbd0d4; }
-        .notice {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        .notice-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-        .notice-error {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-    </style>
     <div class="gdv-container">
         <div class="gdv-main-tabs">
             <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab active">Chấm Bài & Lịch Sử</a>
@@ -227,8 +90,8 @@ function lb_test_render_grader_dashboard_shortcode() {
             <a href="<?php echo esc_url(get_site_url(null, '/bxh/')); ?>" class="gdv-main-tab">Bảng Xếp Hạng</a>
         </div>
     <?php
-    if (isset($_GET['grading_status'])) echo '<div class="notice notice-success">Chấm bài thi #' . intval($_GET['graded_id']) . ' thành công!</div>';
-    if (isset($_GET['delete_status'])) echo '<div class="notice notice-error">Đã xóa bài thi thành công!</div>';
+    if (isset($_GET['grading_status'])) echo '<div class="gdv-notice success">Chấm bài thi #' . intval($_GET['graded_id']) . ' thành công!</div>';
+    if (isset($_GET['delete_status'])) echo '<div class="gdv-notice error">Đã xóa bài thi thành công!</div>';
     
     if (isset($_GET['submission_id']) && is_numeric($_GET['submission_id'])) {
         $submission_id = intval($_GET['submission_id']);

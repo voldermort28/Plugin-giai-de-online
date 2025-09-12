@@ -101,10 +101,14 @@ include_once(LB_TEST_PLUGIN_PATH . 'includes/bulk-management.php');    // FILE M
 
 // Nạp file script và style
 function lb_test_enqueue_scripts() {
-    // Nạp file CSS mới cho plugin
+    // Nạp file CSS chung cho các trang frontend (làm bài, nhập mã đề)
     wp_enqueue_style('lb-test-style', LB_TEST_PLUGIN_URL . 'assets/css/style.css', array(), '1.0.0');
 
-    // Nạp file JS (giữ nguyên)
+    // Chỉ nạp file CSS cho dashboard nếu đang ở một trong các trang quản lý của giám khảo
+    if (is_page('chamdiem') || is_page('code') || is_page('bxh')) {
+        wp_enqueue_style('lb-test-grader-dashboard-style', LB_TEST_PLUGIN_URL . 'assets/css/grader-dashboard.css', array(), '1.0.0');
+    }
+
     wp_enqueue_script('lb-test-main-js', LB_TEST_PLUGIN_URL . 'assets/js/main.js', array('jquery'), '1.0.1', true);
     wp_localize_script('lb-test-main-js', 'lb_test_ajax', array(
         'ajax_url' => admin_url('admin-ajax.php'),
