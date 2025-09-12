@@ -40,7 +40,7 @@ add_shortcode('lam_bai_kiem_tra', function() {
 
         } else {
             // Nếu mã đề sai, hiển thị lại form với thông báo lỗi
-            display_initial_form(false, true);
+            display_initial_form(false, true, $ma_de, $phone_number, $submitter_name);
         }
 
     } else {
@@ -51,7 +51,7 @@ add_shortcode('lam_bai_kiem_tra', function() {
     return ob_get_clean();
 });
 
-function display_initial_form($name_error = false, $code_error = false, $ma_de = '', $phone_number = '') {
+function display_initial_form($name_error = false, $code_error = false, $ma_de = '', $phone_number = '', $submitter_name = '') {
     ?>
     <div class="lb-test-code-input-form">
         <form method="GET" action="">
@@ -66,7 +66,7 @@ function display_initial_form($name_error = false, $code_error = false, $ma_de =
                 <input type="tel" name="phone_number" id="phone_number" value="<?php echo esc_attr($phone_number); ?>" required>
 
                 <label for="submitter_name">Nhập tên của bạn:</label>
-                <input type="text" name="submitter_name" id="submitter_name" required>
+                <input type="text" name="submitter_name" id="submitter_name" value="<?php echo esc_attr($submitter_name); ?>" required>
                 <?php if ($name_error): ?>
                     <p class="error-message">Vui lòng nhập đầy đủ thông tin.</p>
                 <?php endif; ?>
