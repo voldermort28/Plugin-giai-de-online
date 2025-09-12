@@ -43,7 +43,7 @@ function lb_render_leaderboard_page() {
         $leaderboard_data = $wpdb->get_results($wpdb->prepare(
             "SELECT
                 c.display_name,
-                SUM(s.score) as total_score,
+                ROUND(AVG(s.score), 2) as average_score,
                 COUNT(s.submission_id) as tests_taken
             FROM
                 {$submissions_table} s
@@ -61,7 +61,7 @@ function lb_render_leaderboard_page() {
             GROUP BY
                 s.contestant_id
             ORDER BY
-                total_score DESC, tests_taken DESC",
+                average_score DESC, tests_taken DESC",
             $contest_meta_key,
             $current_contest
         ));
@@ -110,7 +110,7 @@ function lb_render_leaderboard_page() {
                             <th style="width: 80px; text-align: center;">Hạng</th>
                             <th>Tên Thí Sinh</th>
                             <th style="text-align: center;">Số bài đã làm</th>
-                            <th style="text-align: right;">Tổng Điểm</th>
+                            <th style="text-align: right;">Điểm Trung Bình</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -124,7 +124,7 @@ function lb_render_leaderboard_page() {
                                     <td><strong><?php echo esc_html($row->display_name); ?></strong></td>
                                     <td style="text-align: center;"><?php echo intval($row->tests_taken); ?></td>
                                     <td style="text-align: right; font-weight: bold; font-size: 1.1em; color: var(--gdv-primary);">
-                                        <?php echo intval($row->total_score); ?>
+                                        <?php echo esc_html($row->average_score); ?>
                                     </td>
                                 </tr>
                                 <?php $rank++; ?>
