@@ -19,14 +19,27 @@ function lb_ma_de_dashboard_shortcode() {
 
     ob_start();
 
+    // --- Hàm tùy chỉnh cho WP_Query để JOIN và ORDER BY theo thời gian nộp bài ---
+    function lb_sort_by_submission_time_join($join) {
+        global $wpdb;
+        $join .= " LEFT JOIN {$wpdb->prefix}lb_test_submissions s ON {$wpdb->posts}.ID = s.test_id ";
+        return $join;
+    }
+    function lb_sort_by_submission_time_orderby($orderby) {
+        global $wpdb;
+        // Sắp xếp theo thời gian nộp bài giảm dần. Những bài chưa nộp (s.end_time IS NULL) sẽ ở cuối.
+        // Sau đó sắp xếp theo ngày tạo đề thi.
+        return " s.end_time DESC, {$wpdb->posts}.post_date DESC ";
+    }
+    add_filter('posts_join', 'lb_sort_by_submission_time_join');
+    add_filter('posts_orderby', 'lb_sort_by_submission_time_orderby');
+
     // --- Dữ liệu ---
     $grader_dashboard_url = get_site_url(null, '/chamdiem/'); 
     $all_tests = new WP_Query([
         'post_type' => 'dethi_baikiemtra',
         'posts_per_page' => -1,
         'post_status' => ['publish', 'draft'],
-        'orderby' => 'date',
-        'order' => 'DESC',
     ]);
 
     // --- Tối ưu hóa: Lấy trước tất cả các submission liên quan ---
@@ -46,6 +59,10 @@ function lb_ma_de_dashboard_shortcode() {
             $submissions_by_test_id[$sub->test_id] = $sub;
         }
     }
+
+    // Gỡ bỏ filter để không ảnh hưởng đến các query khác trên trang
+    remove_filter('posts_join', 'lb_sort_by_submission_time_join');
+    remove_filter('posts_orderby', 'lb_sort_by_submission_time_orderby');
 
     // Đếm số lượng cho mỗi tab
     $counts = ['all' => 0, 'ready' => 0, 'submitted' => 0, 'graded' => 0];

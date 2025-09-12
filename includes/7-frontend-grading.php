@@ -93,6 +93,23 @@ function lb_test_render_grader_dashboard_shortcode() {
             --gdv-border: #e5e9f2;
             --gdv-danger-text: #dc3545;
         }
+        .gdv-button {
+            display: inline-block;
+            background-color: var(--gdv-primary);
+            color: var(--gdv-white) !important;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .gdv-button:hover {
+            background-color: #3a33c9; /* a bit darker */
+            color: var(--gdv-white);
+        }
+
         .gdv-container {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--gdv-bg);
@@ -391,8 +408,15 @@ function render_single_submission_grading_form($submission_id, $view_mode = 'reg
         }
     } else {
         // Chế độ chỉ đọc
-        echo '<h3>Thí sinh: ' . esc_html($submission->submitter_name) . '</h3>';
-        echo '<p><em>(Bạn đang ở chế độ xem lại. Không thể chỉnh sửa.)</em></p>';
+        $regrade_url = add_query_arg('view_mode', 'regrade');
+        echo '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid var(--gdv-border);">
+                <div>
+                    <h3 style="margin:0 0 5px 0;">Thí sinh: ' . esc_html($submission->submitter_name) . '</h3>
+                    <p style="margin:0; color: var(--gdv-text-secondary);"><em>(Bạn đang ở chế độ xem lại. Không thể chỉnh sửa.)</em></p>
+                </div>
+                <a href="' . esc_url($regrade_url) . '" class="gdv-button">Chấm lại</a>
+              </div>';
+
     }
     
     $count = 1;
