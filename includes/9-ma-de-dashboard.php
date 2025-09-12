@@ -51,7 +51,7 @@ function lb_ma_de_dashboard_shortcode() {
         $contestants_table = $wpdb->prefix . 'lb_test_contestants';
         // Lấy tất cả submission cho các test_id này trong 1 truy vấn duy nhất
         $submissions_results = $wpdb->get_results(
-            "SELECT s.test_id, s.submission_id, COALESCE(c.display_name, s.submitter_name) as final_submitter_name, s.end_time, s.status 
+            "SELECT s.test_id, s.submission_id, s.contestant_id, COALESCE(c.display_name, s.submitter_name) as final_submitter_name, s.end_time, s.status 
              FROM $submissions_table 
              s LEFT JOIN $contestants_table c ON s.contestant_id = c.contestant_id
              WHERE s.test_id IN (" . implode(',', array_map('intval', $all_test_ids)) . ")"
@@ -92,6 +92,7 @@ function lb_ma_de_dashboard_shortcode() {
             <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab">Chấm Bài & Lịch Sử</a>
             <a href="<?php echo esc_url(get_site_url(null, '/code/')); ?>" class="gdv-main-tab active">Danh Sách Đề Thi</a>
             <a href="<?php echo esc_url(get_site_url(null, '/bxh/')); ?>" class="gdv-main-tab">Bảng Xếp Hạng</a>
+            <a href="<?php echo esc_url(site_url('/hosothisinh/')); ?>" class="gdv-main-tab">Hồ sơ Thí sinh</a>
         </div>
 
         <div class="gdv-header">
@@ -273,7 +274,11 @@ function lb_render_ma_de_list_table($grader_dashboard_url, $tests_query, $submis
                         if (isset($submissions_by_test_id[$test_id])) {
                             $submission = $submissions_by_test_id[$test_id];
                             $submission_id_for_delete = $submission->submission_id;
-                            $submitter_html = '<td><strong>' . esc_html($submission->final_submitter_name) . '</strong></td>';
+                            
+                            $submitter_name_html = $submission->contestant_id
+                                ? '<a href="' . esc_url(site_url('/hosothisinh/?contestant_id=' . $submission->contestant_id)) . '" class="gdv-action-link">' . esc_html($submission->final_submitter_name) . '</a>'
+                                : esc_html($submission->final_submitter_name);
+                            $submitter_html = '<td><strong>' . $submitter_name_html . '</strong></td>';
                             $end_time_html = '<td>' . wp_date('d/m/Y, H:i', strtotime($submission->end_time)) . '</td>';
                             $view_url = add_query_arg('submission_id', $submission->submission_id, $grader_dashboard_url);
 

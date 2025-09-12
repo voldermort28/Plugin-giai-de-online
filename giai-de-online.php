@@ -97,15 +97,17 @@ include_once(LB_TEST_PLUGIN_PATH . 'includes/8-import-page.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/9-ma-de-dashboard.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/bulk-generator-page.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/10-leaderboard-page.php'); // FILE MỚI
+include_once(LB_TEST_PLUGIN_PATH . 'includes/11-contestant-profiles.php'); // FILE MỚI
 include_once(LB_TEST_PLUGIN_PATH . 'includes/bulk-management.php');    // FILE MỚI
 
 // Nạp file script và style
 function lb_test_enqueue_scripts() {
     // Nạp file CSS chung cho các trang frontend (làm bài, nhập mã đề)
     wp_enqueue_style('lb-test-style', LB_TEST_PLUGIN_URL . 'assets/css/style.css', array(), '1.0.0');
-
+    
     // Chỉ nạp file CSS cho dashboard nếu đang ở một trong các trang quản lý của giám khảo
-    if (is_page('chamdiem') || is_page('code') || is_page('bxh')) {
+    // Thêm 'ho-so-thi-sinh' vào danh sách các trang sử dụng dashboard style
+    if (is_page('chamdiem') || is_page('code') || is_page('bxh') || is_page('hosothisinh')) {
         wp_enqueue_style('lb-test-grader-dashboard-style', LB_TEST_PLUGIN_URL . 'assets/css/grader-dashboard.css', array(), '1.0.0');
     }
 

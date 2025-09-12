@@ -1,15 +1,14 @@
 /* ==========================================================================
    Grader Dashboard - Main Design System
    ========================================================================== */
-
 /* --- Variables --- */
 :root {
-    --gdv-bg: #f4f7fe;
+    --gdv-bg: #f9fafb; /* Light gray background */
     --gdv-white: #ffffff;
-    --gdv-primary: #4a43ec;
-    --gdv-text-primary: #1a214f;
-    --gdv-text-secondary: #7a859f;
-    --gdv-border: #e5e9f2;
+    --gdv-primary: #4f46e5; /* Vibrant Indigo */
+    --gdv-text-primary: #111827; /* Dark Gray for text */
+    --gdv-text-secondary: #6b7280; /* Medium Gray for secondary text */
+    --gdv-border: #e5e7eb; /* Light Gray for borders */
     --gdv-status-ready-bg: #e9f8f1;
     --gdv-status-ready-text: #28a745;
     --gdv-status-submitted-bg: #fff8e1;
@@ -25,7 +24,7 @@
 /* --- Main Layout --- */
 .gdv-container {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--gdv-bg);
+    background-color: transparent; /* Container is transparent, body will have the bg color */
     padding: 20px;
     border-radius: 16px;
 }
@@ -43,6 +42,12 @@
     margin: 0;
 }
 
+.gdv-description {
+    color: var(--gdv-text-secondary);
+    margin-top: 4px;
+    margin-bottom: 20px;
+}
+
 .gdv-toolbar {
     display: flex;
     justify-content: space-between;
@@ -52,41 +57,93 @@
     gap: 15px;
 }
 
+/* --- Search Box --- */
+.gdv-search-box {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+}
+
+.gdv-search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: var(--gdv-text-secondary);
+}
+
+.gdv-search-box input {
+    width: 100%;
+    padding: 10px 12px 10px 40px;
+    border-radius: 8px;
+    border: 1px solid var(--gdv-border);
+    background-color: var(--gdv-white);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.gdv-search-box input:focus {
+    border-color: var(--gdv-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    outline: none;
+}
+
 /* --- Main Navigation Tabs --- */
 .gdv-main-tabs {
     display: flex;
-    gap: 8px;
     margin-bottom: 20px;
+    background-color: var(--gdv-text-primary); /* Nền tối cho thanh tab */
+    border-radius: 8px;
+    overflow: hidden; /* Đảm bảo bo góc áp dụng cho các tab con */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .gdv-main-tab {
-    padding: 10px 20px;
+    padding: 12px 24px; /* Tăng padding */
     text-decoration: none;
-    color: var(--gdv-text-secondary);
+    color: var(--gdv-border); /* Chữ màu xám nhạt */
     font-weight: 500;
-    border-radius: 8px;
     background-color: transparent;
     transition: all 0.2s ease-in-out;
+    border-right: 1px solid #374151; /* Đường kẻ phân cách */
+    position: relative; /* Để định vị cho dải màu nhấn */
+}
+
+.gdv-main-tabs a:last-child {
+    border-right: none; /* Bỏ đường kẻ cho tab cuối cùng */
 }
 
 .gdv-main-tab.active, .gdv-main-tab:hover {
-    background-color: var(--gdv-white);
-    color: var(--gdv-primary);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background-color: #374151; /* Nền tối hơn một chút khi active/hover */
+    color: var(--gdv-white); /* Chữ màu trắng */
+}
+
+.gdv-main-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px; /* Độ dày của dải màu nhấn */
+    background-color: var(--gdv-primary); /* Màu nhấn chính */
 }
 
 /* --- Filter Tabs --- */
 .gdv-tabs {
-    display: flex;
-    gap: 8px;
+    display: inline-flex; /* Để khối bao quanh vừa vặn với nội dung */
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 5px; /* Tạo khoảng đệm bên trong khối */
+    background-color: var(--gdv-bg); /* Nền xám nhạt cho toàn bộ khối tab */
+    border-radius: 9999px; /* Bo tròn để tạo thành dạng viên thuốc */
+    border: 1px solid var(--gdv-border);
 }
 
 .gdv-tabs li {
     padding: 8px 16px;
-    border-radius: 8px;
+    border-radius: 9999px; /* Bo tròn cho từng tab */
     cursor: pointer;
     font-weight: 500;
     color: var(--gdv-text-secondary);
@@ -94,10 +151,14 @@
     transition: all 0.2s ease-in-out;
 }
 
-.gdv-tabs li.active, .gdv-tabs li:hover {
-    background-color: var(--gdv-white);
-    color: var(--gdv-text-primary);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+.gdv-tabs li.active {
+    background-color: var(--gdv-primary); /* Nền màu nhấn cho tab đang hoạt động */
+    color: var(--gdv-white); /* Chữ màu trắng */
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+.gdv-tabs li:not(.active):hover {
+    background-color: var(--gdv-border); /* Hiệu ứng hover cho các tab không hoạt động */
 }
 
 .gdv-tabs .count {
@@ -107,13 +168,20 @@
     border-radius: 10px;
     font-size: 12px;
     margin-left: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Thay đổi màu cho số đếm khi tab đang hoạt động */
+.gdv-tabs li.active .count {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--gdv-white);
 }
 
 /* --- Tables --- */
 .gdv-table-wrapper {
     background-color: var(--gdv-white);
     border-radius: 12px;
-    overflow: hidden;
+    overflow-x: auto;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
@@ -123,7 +191,7 @@
 }
 
 .gdv-table th, .gdv-table td {
-    padding: 16px;
+    padding: 16px 24px;
     text-align: left;
     border-bottom: 1px solid var(--gdv-border);
     color: var(--gdv-text-secondary);
@@ -132,6 +200,7 @@
 
 .gdv-table th {
     color: var(--gdv-text-primary);
+    text-transform: uppercase;
     font-weight: 600;
 }
 
@@ -146,6 +215,34 @@
 .gdv-table td strong {
     color: var(--gdv-text-primary);
     font-weight: 500;
+}
+
+/* --- Avatar in Table --- */
+.gdv-avatar-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gdv-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--gdv-primary);
+    color: var(--gdv-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.gdv-avatar-info .name {
+    color: var(--gdv-text-primary);
+    font-weight: 600;
+}
+.gdv-avatar-info .subtext {
+    color: var(--gdv-text-secondary);
 }
 
 /* --- Components --- */
@@ -170,6 +267,15 @@
     color: var(--gdv-primary);
     text-decoration: none;
     font-weight: 500;
+}
+.gdv-action-link:hover {
+    text-decoration: underline;
+}
+
+.gdv-button.secondary {
+    background-color: var(--gdv-white);
+    color: var(--gdv-text-primary) !important;
+    border: 1px solid var(--gdv-border);
 }
 
 .gdv-status {

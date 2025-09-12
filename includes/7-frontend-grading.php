@@ -88,6 +88,7 @@ function lb_test_render_grader_dashboard_shortcode() {
             <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab active">Chấm Bài & Lịch Sử</a>
             <a href="<?php echo esc_url(get_site_url(null, '/code/')); ?>" class="gdv-main-tab">Danh Sách Đề Thi</a>
             <a href="<?php echo esc_url(get_site_url(null, '/bxh/')); ?>" class="gdv-main-tab">Bảng Xếp Hạng</a>
+            <a href="<?php echo esc_url(site_url('/hosothisinh/')); ?>" class="gdv-main-tab">Hồ sơ Thí sinh</a>
         </div>
     <?php
     if (isset($_GET['grading_status'])) echo '<div class="gdv-notice success">Chấm bài thi #' . intval($_GET['graded_id']) . ' thành công!</div>';
@@ -202,11 +203,17 @@ function render_grader_dashboard_tables() {
             $grading_url = add_query_arg('submission_id', $sub->submission_id, $page_url);
             $delete_nonce = wp_create_nonce('lb_test_delete_submission_' . $sub->submission_id);
             $delete_url = add_query_arg(['action' => 'delete_submission', 'submission_id' => $sub->submission_id, '_wpnonce' => $delete_nonce], $page_url);
+            
+            // Tạo link cho tên thí sinh
+            $submitter_html = $sub->contestant_id
+                ? '<a href="' . esc_url(site_url('/hosothisinh/?contestant_id=' . $sub->contestant_id)) . '" class="gdv-action-link">' . esc_html($sub->final_submitter_name) . '</a>'
+                : esc_html($sub->final_submitter_name);
+
             echo '<tr>
                     <td><input type="checkbox" class="gdv-row-checkbox" value="' . esc_attr($sub->submission_id) . '"></td>
                     <td>#' . $sub->submission_id . '</td>
                     <td><strong>' . esc_html($sub->post_title) . '</strong></td>
-                    <td><strong>' . esc_html($sub->final_submitter_name) . '</strong></td>
+                    <td><strong>' . $submitter_html . '</strong></td>
                     <td>' . wp_date('d/m/Y, H:i', strtotime($sub->end_time)) . '</td>
                     <td><a href="' . esc_url($grading_url) . '" class="gdv-action-link"><strong>Chấm bài</strong></a> <a href="' . esc_url($delete_url) . '" class="gdv-action-link" style="color: var(--gdv-danger-text);" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td>
                   </tr>';
@@ -248,11 +255,17 @@ function render_grader_dashboard_tables() {
             $regrade_url = add_query_arg(['submission_id' => $sub->submission_id, 'view_mode' => 'regrade'], $page_url);
             $delete_nonce = wp_create_nonce('lb_test_delete_submission_' . $sub->submission_id);
             $delete_url = add_query_arg(['action' => 'delete_submission', 'submission_id' => $sub->submission_id, '_wpnonce' => $delete_nonce], $page_url);
+            
+            // Tạo link cho tên thí sinh
+            $submitter_html = $sub->contestant_id
+                ? '<a href="' . esc_url(site_url('/hosothisinh/?contestant_id=' . $sub->contestant_id)) . '" class="gdv-action-link">' . esc_html($sub->final_submitter_name) . '</a>'
+                : esc_html($sub->final_submitter_name);
+
             echo '<tr>
                     <td><input type="checkbox" class="gdv-row-checkbox" value="' . esc_attr($sub->submission_id) . '"></td>
                     <td>#' . $sub->submission_id . '</td>
                     <td><strong>' . esc_html($sub->post_title) . '</strong></td>
-                    <td><strong>' . esc_html($sub->final_submitter_name) . '</strong></td>
+                    <td><strong>' . $submitter_html . '</strong></td>
                     <td>' . wp_date('d/m/Y, H:i', strtotime($sub->end_time)) . '</td>
                     <td><strong><a href="' . esc_url($review_url) . '" class="gdv-action-link">' . intval($sub->score) . '/' . $total_questions_for_sub . '</a></strong></td>
                     <td><a href="' . esc_url($review_url) . '" class="gdv-action-link">Xem lại</a> | <a href="' . esc_url($regrade_url) . '" class="gdv-action-link">Chấm lại</a> | <a href="' . esc_url($delete_url) . '" class="gdv-action-link" style="color: var(--gdv-danger-text);" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td>

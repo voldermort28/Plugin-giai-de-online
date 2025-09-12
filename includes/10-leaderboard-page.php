@@ -42,6 +42,7 @@ function lb_render_leaderboard_page() {
 
         $leaderboard_data = $wpdb->get_results($wpdb->prepare(
             "SELECT
+                c.contestant_id,
                 c.display_name,
                 ROUND(AVG(s.score), 2) as average_score,
                 COUNT(s.submission_id) as tests_taken
@@ -80,6 +81,7 @@ function lb_render_leaderboard_page() {
             <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab">Chấm Bài & Lịch Sử</a>
             <a href="<?php echo esc_url(get_site_url(null, '/code/')); ?>" class="gdv-main-tab">Danh Sách Đề Thi</a>
             <a href="<?php echo esc_url(get_site_url(null, '/bxh/')); ?>" class="gdv-main-tab active">Bảng Xếp Hạng</a>
+            <a href="<?php echo esc_url(site_url('/hosothisinh/')); ?>" class="gdv-main-tab">Hồ sơ Thí sinh</a>
         </div>
 
         <div class="gdv-header">
@@ -121,7 +123,11 @@ function lb_render_leaderboard_page() {
                                     <td class="gdv-rank gdv-rank-<?php echo $rank <= 3 ? $rank : 'other'; ?>">
                                         <?php echo $rank; ?>
                                     </td>
-                                    <td><strong><?php echo esc_html($row->display_name); ?></strong></td>
+                                    <td>
+                                        <strong>
+                                            <a href="<?php echo esc_url(site_url('/hosothisinh/?contestant_id=' . $row->contestant_id)); ?>" class="gdv-action-link"><?php echo esc_html($row->display_name); ?></a>
+                                        </strong>
+                                    </td>
                                     <td style="text-align: center;"><?php echo intval($row->tests_taken); ?></td>
                                     <td style="text-align: right; font-weight: bold; font-size: 1.1em; color: var(--gdv-primary);">
                                         <?php echo esc_html($row->average_score); ?>
