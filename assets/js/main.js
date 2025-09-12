@@ -88,17 +88,33 @@ jQuery(document).ready(function($) {
             data: form.serialize() + '&action=submit_test',
             success: function(response) {
                 if (response.success) {
-                    form.hide();
-                    timerDiv.hide();
+                    // Ẩn toàn bộ khu vực làm bài
+                    $('#lb-test-content-wrapper').hide();
                     
-                    // Lấy URL gốc của trang làm bài (không chứa mã đề)
                     const returnUrl = window.location.origin + window.location.pathname;
 
-                    // Tạo thông báo thành công và nút bấm "Làm bài thi khác"
-                    const successHtml = '<h3>' + response.data.message + '</h3>' +
-                                      '<a href="' + returnUrl + '" style="text-decoration:none; background:#0073aa; color:white; padding:10px 15px; border-radius:3px; display:inline-block; margin-top:15px;">Làm bài thi khác</a>';
+                    // SVG Icon cho dấu tick với hiệu ứng
+                    const checkIconSvg = `
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark-path" fill="none" stroke="#fff" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                    `;
 
-                    resultMsg.css('color', 'green').html(successHtml);
+                    // Cấu trúc HTML hiện đại cho màn hình thành công
+                    const successHtml = `
+                        <div class="lb-test-success-wrapper">
+                            <div class="success-icon">${checkIconSvg}</div>
+                            <h3>${response.data.message}</h3>
+                            <div class="lb-test-success-details">
+                                <p><strong>Bài thi:</strong> ${response.data.test_title}</p>
+                                <p><strong>Thí sinh:</strong> ${response.data.submitter_name}</p>
+                            </div>
+                            <a href="${returnUrl}" class="success-button">Làm bài thi khác</a>
+                        </div>
+                    `;
+
+                    resultMsg.html(successHtml);
                 } else {
                     resultMsg.css('color', 'red').text('Lỗi: ' + response.data);
                     submitBtn.prop('disabled', false).text('Nộp bài');

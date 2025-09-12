@@ -98,7 +98,12 @@ function lb_test_handle_submission() {
 
     wp_update_post(array('ID' => $test_id, 'post_status' => 'draft'));
 
-    wp_send_json_success(['message' => 'Nộp bài thành công!']);
+    // Gửi về thêm thông tin để hiển thị trên màn hình thành công
+    wp_send_json_success([
+        'message' => 'Nộp bài thành công!',
+        'test_title' => get_the_title($test_id),
+        'submitter_name' => $submitter_name
+    ]);
 }
 
 /**

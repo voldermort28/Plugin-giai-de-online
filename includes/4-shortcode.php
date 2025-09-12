@@ -88,6 +88,9 @@ function display_test_content($test_id, $ma_de, $submitter_name, $phone_number) 
     $question_ids = get_post_meta($test_id, 'lb_test_danh_sach_cau_hoi', true);
     $question_ids = is_array($question_ids) ? $question_ids : [];
 
+    // Bọc toàn bộ nội dung bài thi vào một div để dễ dàng ẩn đi bằng JS
+    echo '<div id="lb-test-content-wrapper">';
+
     echo '<h1>' . get_the_title($test_id) . '</h1>';
     echo '<h3>Thí sinh: ' . esc_html($submitter_name) . '</h3>';
     
@@ -133,9 +136,13 @@ function display_test_content($test_id, $ma_de, $submitter_name, $phone_number) 
         }
         echo '<button type="submit" id="submit-test-btn">Nộp bài</button>';
         echo '</form>';
-        echo '<div id="test-result-message"></div>';
 
     } else {
         echo '<p class="lb-test-error-message">Bài kiểm tra này chưa có câu hỏi nào.</p>';
     }
+
+    echo '</div>'; // Đóng div #lb-test-content-wrapper
+
+    // Div hiển thị kết quả sẽ nằm ngoài để không bị ẩn đi
+    echo '<div id="test-result-message"></div>';
 }
