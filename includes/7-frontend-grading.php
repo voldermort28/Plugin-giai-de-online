@@ -224,6 +224,7 @@ function lb_test_render_grader_dashboard_shortcode() {
         <div class="gdv-main-tabs">
             <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab active">Chấm Bài & Lịch Sử</a>
             <a href="<?php echo esc_url(get_site_url(null, '/code/')); ?>" class="gdv-main-tab">Danh Sách Đề Thi</a>
+            <a href="<?php echo esc_url(get_site_url(null, '/bxh/')); ?>" class="gdv-main-tab">Bảng Xếp Hạng</a>
         </div>
     <?php
     if (isset($_GET['grading_status'])) echo '<div class="notice notice-success">Chấm bài thi #' . intval($_GET['graded_id']) . ' thành công!</div>';

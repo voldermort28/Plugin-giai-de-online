@@ -290,6 +290,7 @@ function lb_ma_de_dashboard_shortcode() {
         <div class="gdv-main-tabs">
             <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab">Chấm Bài & Lịch Sử</a>
             <a href="<?php echo esc_url(get_site_url(null, '/code/')); ?>" class="gdv-main-tab active">Danh Sách Đề Thi</a>
+            <a href="<?php echo esc_url(get_site_url(null, '/bxh/')); ?>" class="gdv-main-tab">Bảng Xếp Hạng</a>
         </div>
 
         <div class="gdv-header">
