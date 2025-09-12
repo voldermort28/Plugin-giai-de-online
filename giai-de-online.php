@@ -23,18 +23,32 @@ function lb_test_activate_plugin() {
     $charset_collate = $wpdb->get_charset_collate();
     $submissions_table_name = $wpdb->prefix . 'lb_test_submissions';
     $answers_table_name = $wpdb->prefix . 'lb_test_answers';
+    $contestants_table_name = $wpdb->prefix . 'lb_test_contestants';
+
+    // Bảng mới để lưu thông tin thí sinh
+    $sql_contestants = "CREATE TABLE $contestants_table_name (
+        contestant_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        phone_number VARCHAR(20) NOT NULL,
+        display_name VARCHAR(255) NOT NULL,
+        created_at DATETIME NOT NULL,
+        PRIMARY KEY  (contestant_id),
+        UNIQUE KEY phone_number (phone_number)
+    ) $charset_collate;";
 
     $sql_submissions = "CREATE TABLE $submissions_table_name (
         submission_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         test_id BIGINT(20) UNSIGNED NOT NULL,
         user_id BIGINT(20) UNSIGNED DEFAULT 0 NOT NULL,
-        submitter_name VARCHAR(255) NULL, -- DÒNG NÀY PHẢI CÓ để lưu tên thí sinh
+        contestant_id BIGINT(20) UNSIGNED DEFAULT 0 NOT NULL,
+        submitter_name VARCHAR(255) NULL, -- Giữ lại để tương thích với dữ liệu cũ
         ma_de VARCHAR(50) NOT NULL,
         start_time DATETIME NOT NULL,
         end_time DATETIME DEFAULT NULL,
         status VARCHAR(20) NOT NULL,
         score FLOAT DEFAULT NULL,
-        PRIMARY KEY  (submission_id)
+        PRIMARY KEY  (submission_id),
+        KEY test_id (test_id),
+        KEY contestant_id (contestant_id)
     ) $charset_collate;";
 
     $sql_answers = "CREATE TABLE $answers_table_name (
@@ -46,6 +60,7 @@ function lb_test_activate_plugin() {
         PRIMARY KEY  (answer_id)
     ) $charset_collate;";
 
+    dbDelta($sql_contestants);
     dbDelta($sql_submissions);
     dbDelta($sql_answers);
     
@@ -93,7 +108,8 @@ function lb_test_enqueue_scripts() {
     wp_localize_script('lb-test-main-js', 'lb_test_ajax', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'grading_nonce' => wp_create_nonce('lb_test_grading_nonce'),
-        'bulk_delete_nonce' => wp_create_nonce('lb_test_bulk_delete_nonce')
+        'bulk_delete_nonce' => wp_create_nonce('lb_test_bulk_delete_nonce'),
+        'phone_check_nonce' => wp_create_nonce('lb_test_phone_check_nonce')
     ));
 }
 add_action('wp_enqueue_scripts', 'lb_test_enqueue_scripts');

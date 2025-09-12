@@ -6,6 +6,7 @@ add_shortcode('lam_bai_kiem_tra', function() {
 
     // Lấy thông tin từ URL (sau khi submit form)
     $ma_de = isset($_GET['ma_de']) ? sanitize_text_field($_GET['ma_de']) : '';
+    $phone_number = isset($_GET['phone_number']) ? sanitize_text_field($_GET['phone_number']) : '';
     $submitter_name = isset($_GET['submitter_name']) ? sanitize_text_field($_GET['submitter_name']) : '';
 
     // Nếu người dùng đã đăng nhập, ưu tiên tên tài khoản của họ
@@ -28,12 +29,12 @@ add_shortcode('lam_bai_kiem_tra', function() {
             $test_query->the_post();
             $test_id = get_the_ID();
             
-            if (empty($submitter_name)) {
+            if (empty($submitter_name) || empty($phone_number)) {
                 // Nếu chưa có tên, hiển thị lại form ban đầu với thông báo lỗi
-                display_initial_form(true); 
+                display_initial_form(true, false, $ma_de, $phone_number); 
             } else {
                 // Nếu có đủ thông tin, hiển thị bài thi
-                display_test_content($test_id, $ma_de, $submitter_name);
+                display_test_content($test_id, $ma_de, $submitter_name, $phone_number);
             }
             wp_reset_postdata();
 
@@ -50,22 +51,30 @@ add_shortcode('lam_bai_kiem_tra', function() {
     return ob_get_clean();
 });
 
-function display_initial_form($name_error = false, $code_error = false) {
+function display_initial_form($name_error = false, $code_error = false, $ma_de = '', $phone_number = '') {
     ?>
     <div class="lb-test-code-input-form">
         <form method="GET" action="">
             <label for="ma_de">Nhập mã đề thi:</label>
-            <input type="text" name="ma_de" id="ma_de" required>
+            <input type="text" name="ma_de" id="ma_de" value="<?php echo esc_attr($ma_de); ?>" required>
             <?php if ($code_error): ?>
                 <p class="error-message">Mã đề thi không hợp lệ hoặc đã được sử dụng.</p>
             <?php endif; ?>
 
             <?php if (!is_user_logged_in()): ?>
+                <label for="phone_number">Nhập số điện thoại:</label>
+                <input type="tel" name="phone_number" id="phone_number" value="<?php echo esc_attr($phone_number); ?>" required>
+
                 <label for="submitter_name">Nhập tên của bạn:</label>
                 <input type="text" name="submitter_name" id="submitter_name" required>
                 <?php if ($name_error): ?>
-                    <p class="error-message">Vui lòng nhập tên của bạn.</p>
+                    <p class="error-message">Vui lòng nhập đầy đủ thông tin.</p>
                 <?php endif; ?>
+                <p id="phone_check_msg" style="color: #0073aa; font-style: italic;"></p>
+            <?php else: ?>
+                <?php $user = wp_get_current_user(); ?>
+                <input type="hidden" name="phone_number" value="<?php echo esc_attr($user->user_email); // Dùng email làm SĐT cho user đã đăng nhập ?>">
+                <input type="hidden" name="submitter_name" value="<?php echo esc_attr($user->display_name); ?>">
             <?php endif; ?>
 
             <button type="submit">Bắt đầu làm bài</button>
@@ -74,7 +83,7 @@ function display_initial_form($name_error = false, $code_error = false) {
     <?php
 }
 
-function display_test_content($test_id, $ma_de, $submitter_name) {
+function display_test_content($test_id, $ma_de, $submitter_name, $phone_number) {
     $thoi_gian = get_post_meta($test_id, 'lb_test_thoi_gian', true);
     $question_ids = get_post_meta($test_id, 'lb_test_danh_sach_cau_hoi', true);
     $question_ids = is_array($question_ids) ? $question_ids : [];
@@ -92,6 +101,7 @@ function display_test_content($test_id, $ma_de, $submitter_name) {
         echo '<input type="hidden" name="test_id" value="' . $test_id . '">';
         echo '<input type="hidden" name="ma_de" value="' . esc_attr($ma_de) . '">';
         echo '<input type="hidden" name="submitter_name" value="' . esc_attr($submitter_name) . '">';
+        echo '<input type="hidden" name="phone_number" value="' . esc_attr($phone_number) . '">';
 
         $count = 1;
         foreach ($question_ids as $q_id) {

@@ -17,6 +17,40 @@ jQuery(document).ready(function($) {
     toggleQuestionFields(); // Chạy lần đầu khi tải trang
     questionTypeSelect.on('change', toggleQuestionFields);
 
+    // --- FRONTEND JS: Form nhập thông tin thí sinh (AJAX check SĐT) ---
+    const phoneInput = $('#phone_number');
+    const nameInput = $('#submitter_name');
+    const phoneCheckMsg = $('#phone_check_msg');
+
+    phoneInput.on('blur', function() {
+        const phone = $(this).val().trim();
+        if (phone.length < 9) { // Simple validation
+            phoneCheckMsg.text('');
+            nameInput.prop('readonly', false);
+            return;
+        }
+
+        phoneCheckMsg.text('Đang kiểm tra...');
+
+        $.ajax({
+            url: lb_test_ajax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'check_contestant_phone',
+                nonce: lb_test_ajax.phone_check_nonce,
+                phone_number: phone
+            },
+            success: function(response) {
+                if (response.success) {
+                    nameInput.val(response.data.display_name).prop('readonly', true);
+                    phoneCheckMsg.text('Chào mừng bạn trở lại!');
+                } else {
+                    nameInput.val('').prop('readonly', false);
+                    phoneCheckMsg.text('Số điện thoại mới, vui lòng nhập tên của bạn.');
+                }
+            }
+        });
+    });
 
     // --- FRONTEND JS: Form làm bài ---
     const timerDiv = $('#lb-test-timer');

@@ -320,9 +320,17 @@ function render_grader_dashboard_tables() {
     global $wpdb;
     $page_url = get_permalink();
     $submissions_table = $wpdb->prefix . 'lb_test_submissions';
+    $contestants_table = $wpdb->prefix . 'lb_test_contestants';
     $posts_table = $wpdb->prefix . 'posts';
 
-    $pending_submissions = $wpdb->get_results("SELECT s.*, p.post_title FROM $submissions_table s LEFT JOIN $posts_table p ON s.test_id = p.ID WHERE s.status = 'submitted' ORDER BY s.end_time DESC");
+    $pending_submissions = $wpdb->get_results("
+        SELECT s.*, p.post_title, COALESCE(c.display_name, s.submitter_name) as final_submitter_name
+        FROM $submissions_table s 
+        LEFT JOIN $posts_table p ON s.test_id = p.ID 
+        LEFT JOIN $contestants_table c ON s.contestant_id = c.contestant_id
+        WHERE s.status = 'submitted' 
+        ORDER BY s.end_time DESC
+    ");
     echo '<h2>Các bài thi cần chấm</h2>';
     if ($pending_submissions) {
         echo '<div class="gdv-table-wrapper"><table class="gdv-table" id="pending-table"><thead><tr><th><input type="checkbox" class="gdv-select-all" data-table="pending-table"></th><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Hành động</th></tr></thead><tbody>';
@@ -334,7 +342,7 @@ function render_grader_dashboard_tables() {
                     <td><input type="checkbox" class="gdv-row-checkbox" value="' . esc_attr($sub->submission_id) . '"></td>
                     <td>#' . $sub->submission_id . '</td>
                     <td><strong>' . esc_html($sub->post_title) . '</strong></td>
-                    <td><strong>' . esc_html($sub->submitter_name) . '</strong></td>
+                    <td><strong>' . esc_html($sub->final_submitter_name) . '</strong></td>
                     <td>' . wp_date('d/m/Y, H:i', strtotime($sub->end_time)) . '</td>
                     <td><a href="' . esc_url($grading_url) . '" class="gdv-action-link"><strong>Chấm bài</strong></a> <a href="' . esc_url($delete_url) . '" class="gdv-action-link" style="color: var(--gdv-danger-text);" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td>
                   </tr>';
@@ -342,7 +350,13 @@ function render_grader_dashboard_tables() {
         echo '</tbody></table></div>';
     } else { echo '<p>Không có bài thi nào cần chấm.</p>'; }
 
-    $graded_submissions = $wpdb->get_results("SELECT s.*, p.post_title FROM $submissions_table s LEFT JOIN $posts_table p ON s.test_id = p.ID WHERE s.status = 'graded' ORDER BY s.end_time DESC");
+    $graded_submissions = $wpdb->get_results("
+        SELECT s.*, p.post_title, COALESCE(c.display_name, s.submitter_name) as final_submitter_name
+        FROM $submissions_table s 
+        LEFT JOIN $posts_table p ON s.test_id = p.ID 
+        LEFT JOIN $contestants_table c ON s.contestant_id = c.contestant_id
+        WHERE s.status = 'graded' ORDER BY s.end_time DESC
+    ");
     echo '<h2 style="margin-top: 40px;">Lịch sử chấm bài</h2>';
     if ($graded_submissions) {
         echo '<div class="gdv-table-wrapper"><table class="gdv-table" id="graded-table"><thead><tr><th><input type="checkbox" class="gdv-select-all" data-table="graded-table"></th><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Điểm số</th><th>Hành động</th></tr></thead><tbody>';
@@ -374,7 +388,7 @@ function render_grader_dashboard_tables() {
                     <td><input type="checkbox" class="gdv-row-checkbox" value="' . esc_attr($sub->submission_id) . '"></td>
                     <td>#' . $sub->submission_id . '</td>
                     <td><strong>' . esc_html($sub->post_title) . '</strong></td>
-                    <td><strong>' . esc_html($sub->submitter_name) . '</strong></td>
+                    <td><strong>' . esc_html($sub->final_submitter_name) . '</strong></td>
                     <td>' . wp_date('d/m/Y, H:i', strtotime($sub->end_time)) . '</td>
                     <td><strong><a href="' . esc_url($review_url) . '" class="gdv-action-link">' . intval($sub->score) . '/' . $total_questions_for_sub . '</a></strong></td>
                     <td><a href="' . esc_url($review_url) . '" class="gdv-action-link">Xem lại</a> | <a href="' . esc_url($regrade_url) . '" class="gdv-action-link">Chấm lại</a> | <a href="' . esc_url($delete_url) . '" class="gdv-action-link" style="color: var(--gdv-danger-text);" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td>
@@ -386,7 +400,13 @@ function render_grader_dashboard_tables() {
 
 function render_single_submission_grading_form($submission_id, $view_mode = 'regrade') {
     global $wpdb;
-    $submission = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}lb_test_submissions WHERE submission_id = %d", $submission_id));
+    $submissions_table = $wpdb->prefix . 'lb_test_submissions';
+    $contestants_table = $wpdb->prefix . 'lb_test_contestants';
+    $submission = $wpdb->get_row($wpdb->prepare("
+        SELECT s.*, COALESCE(c.display_name, s.submitter_name) as final_submitter_name
+        FROM $submissions_table s
+        LEFT JOIN $contestants_table c ON s.contestant_id = c.contestant_id
+        WHERE s.submission_id = %d", $submission_id));
     if (!$submission) { echo '<p>Không tìm thấy bài làm.</p>'; return; }
     $answers = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}lb_test_answers WHERE submission_id = %d", $submission_id));
     $is_graded = ($submission->status === 'graded');
@@ -402,7 +422,7 @@ function render_single_submission_grading_form($submission_id, $view_mode = 'reg
         wp_nonce_field('lb_test_grade_action', 'lb_test_grade_nonce');
         echo '<input type="hidden" name="action" value="grade_submission">';
         echo '<input type="hidden" name="submission_id" value="' . $submission_id . '">';
-        echo '<h3>Thí sinh: <input type="text" name="submitter_name" value="' . esc_attr($submission->submitter_name) . '" style="font-size: 1em; padding: 5px;"></h3>';
+        echo '<h3>Thí sinh: <input type="text" name="submitter_name" value="' . esc_attr($submission->final_submitter_name) . '" style="font-size: 1em; padding: 5px;"></h3>';
         if ($is_graded) {
             echo '<p><em>(Bạn đang ở chế độ chấm lại. Thay đổi sẽ được lưu khi bạn nhấn "Cập nhật điểm".)</em></p>';
         }
@@ -411,7 +431,7 @@ function render_single_submission_grading_form($submission_id, $view_mode = 'reg
         $regrade_url = add_query_arg('view_mode', 'regrade');
         echo '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid var(--gdv-border);">
                 <div>
-                    <h3 style="margin:0 0 5px 0;">Thí sinh: ' . esc_html($submission->submitter_name) . '</h3>
+                    <h3 style="margin:0 0 5px 0;">Thí sinh: ' . esc_html($submission->final_submitter_name) . '</h3>
                     <p style="margin:0; color: var(--gdv-text-secondary);"><em>(Bạn đang ở chế độ xem lại. Không thể chỉnh sửa.)</em></p>
                 </div>
                 <a href="' . esc_url($regrade_url) . '" class="gdv-button">Chấm lại</a>

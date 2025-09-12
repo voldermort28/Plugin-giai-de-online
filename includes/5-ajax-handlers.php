@@ -13,12 +13,42 @@ function lb_test_handle_submission() {
     global $wpdb;
     $test_id = intval($_POST['test_id']);
     $user_id = get_current_user_id();
+    $phone_number = sanitize_text_field($_POST['phone_number'] ?? '');
     $submitter_name = sanitize_text_field($_POST['submitter_name'] ?? 'Ẩn danh');
+
+    if (empty($phone_number) || empty($submitter_name)) {
+        wp_send_json_error('Thiếu thông tin thí sinh.');
+        return;
+    }
+
+    // --- Xử lý thông tin thí sinh ---
+    $contestants_table = $wpdb->prefix . 'lb_test_contestants';
+    $contestant_id = 0;
+
+    // Tìm thí sinh bằng SĐT
+    $existing_contestant = $wpdb->get_row($wpdb->prepare("SELECT contestant_id, display_name FROM $contestants_table WHERE phone_number = %s", $phone_number));
+
+    if ($existing_contestant) {
+        $contestant_id = $existing_contestant->contestant_id;
+        // Cập nhật tên nếu có sự thay đổi
+        if ($existing_contestant->display_name !== $submitter_name) {
+            $wpdb->update($contestants_table, ['display_name' => $submitter_name], ['contestant_id' => $contestant_id]);
+        }
+    } else {
+        // Tạo thí sinh mới nếu chưa tồn tại
+        $wpdb->insert($contestants_table, [
+            'phone_number' => $phone_number,
+            'display_name' => $submitter_name,
+            'created_at'   => current_time('mysql'),
+        ]);
+        $contestant_id = $wpdb->insert_id;
+    }
 
     $wpdb->insert($wpdb->prefix . 'lb_test_submissions', [
         'test_id' => $test_id,
         'user_id' => $user_id,
-        'submitter_name' => $submitter_name,
+        'contestant_id' => $contestant_id,
+        'submitter_name' => $submitter_name, // Vẫn lưu tên tại thời điểm thi
         'ma_de' => sanitize_text_field($_POST['ma_de']),
         'start_time' => current_time('mysql'),
         'end_time' => current_time('mysql'),
@@ -43,13 +73,16 @@ function lb_test_handle_submission() {
         $is_correct = 2; // Mặc định là 'chờ chấm' cho câu tự luận
 
         if ($loai_cau_hoi === 'trac_nghiem') {
-            $correct_answer = get_post_meta($q_id, 'lb_test_dap_an', true);
-            
-            // Logic so sánh mạnh hơn để tránh lỗi ký tự ẩn
-            $clean_user_answer = preg_replace('/[^A-Z]/', '', strtoupper($user_answer));
-            $clean_correct_answer = preg_replace('/[^A-Z]/', '', strtoupper($correct_answer));
-            
-            $is_correct = ($clean_user_answer == $clean_correct_answer) ? 1 : 0;
+            $correct_answer = get_post_meta($q_id, 'lb_test_dap_an', true) ?: '';
+
+            if (!empty($user_answer)) {
+                // Logic so sánh mạnh hơn để tránh lỗi ký tự ẩn và khoảng trắng
+                $clean_user_answer = preg_replace('/[^A-Z]/', '', strtoupper($user_answer));
+                $clean_correct_answer = preg_replace('/[^A-Z]/', '', strtoupper($correct_answer));
+                $is_correct = ($clean_user_answer === $clean_correct_answer) ? 1 : 0;
+            } else {
+                $is_correct = 0; // Nếu không trả lời, tính là sai
+            }
         }
 
         $wpdb->insert(
@@ -148,5 +181,33 @@ function lb_handle_bulk_delete() {
 
     } else {
         wp_send_json_error(['message' => 'Loại xóa không được hỗ trợ.']);
+    }
+}
+
+/**
+ * ===================================================================
+ * AJAX HANDLER FOR CHECKING CONTESTANT PHONE
+ * ===================================================================
+ */
+add_action('wp_ajax_check_contestant_phone', 'lb_handle_check_contestant_phone');
+add_action('wp_ajax_nopriv_check_contestant_phone', 'lb_handle_check_contestant_phone');
+
+function lb_handle_check_contestant_phone() {
+    check_ajax_referer('lb_test_phone_check_nonce', 'nonce');
+
+    global $wpdb;
+    $phone_number = sanitize_text_field($_POST['phone_number']);
+
+    if (empty($phone_number)) {
+        wp_send_json_error();
+        return;
+    }
+
+    $contestant = $wpdb->get_row($wpdb->prepare("SELECT display_name FROM {$wpdb->prefix}lb_test_contestants WHERE phone_number = %s", $phone_number));
+
+    if ($contestant) {
+        wp_send_json_success(['display_name' => $contestant->display_name]);
+    } else {
+        wp_send_json_error();
     }
 }
