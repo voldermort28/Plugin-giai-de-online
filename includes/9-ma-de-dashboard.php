@@ -29,29 +29,38 @@ function lb_ma_de_dashboard_shortcode() {
         'order' => 'DESC',
     ]);
 
+    // --- Tối ưu hóa: Lấy trước tất cả các submission liên quan ---
+    $all_test_ids = wp_list_pluck($all_tests->posts, 'ID');
+    $submissions_by_test_id = [];
+    if (!empty($all_test_ids)) {
+        global $wpdb;
+        $submissions_table = $wpdb->prefix . 'lb_test_submissions';
+        // Lấy tất cả submission cho các test_id này trong 1 truy vấn duy nhất
+        $submissions_results = $wpdb->get_results(
+            "SELECT test_id, submission_id, submitter_name, end_time, status 
+             FROM $submissions_table 
+             WHERE test_id IN (" . implode(',', array_map('intval', $all_test_ids)) . ")"
+        );
+        // Tạo một map để tra cứu nhanh: test_id => submission_object
+        foreach ($submissions_results as $sub) {
+            $submissions_by_test_id[$sub->test_id] = $sub;
+        }
+    }
+
     // Đếm số lượng cho mỗi tab
     $counts = ['all' => 0, 'ready' => 0, 'submitted' => 0, 'graded' => 0];
     if ($all_tests->have_posts()) {
         $counts['all'] = $all_tests->post_count;
-        global $wpdb;
-        $submissions_table = $wpdb->prefix . 'lb_test_submissions';
         
         while($all_tests->have_posts()) {
             $all_tests->the_post();
             $test_id = get_the_ID();
             $post_status = get_post_status($test_id);
 
-            if ($post_status === 'publish') {
-                $counts['ready']++;
-            } else { // draft
-                $submission = $wpdb->get_row($wpdb->prepare("SELECT status FROM $submissions_table WHERE test_id = %d", $test_id));
-                if ($submission) {
-                    if ($submission->status === 'graded') {
-                        $counts['graded']++;
-                    } else { // submitted
-                        $counts['submitted']++;
-                    }
-                }
+            if ($post_status === 'publish') $counts['ready']++;
+            else { // draft
+                $submission = $submissions_by_test_id[$test_id] ?? null;
+                if ($submission) $counts[$submission->status]++;
             }
         }
         wp_reset_postdata();
@@ -278,7 +287,7 @@ function lb_ma_de_dashboard_shortcode() {
         </div>
 
         <div class="gdv-table-wrapper">
-            <?php lb_render_ma_de_list_table($grader_dashboard_url, $all_tests); ?>
+            <?php lb_render_ma_de_list_table($grader_dashboard_url, $all_tests, $submissions_by_test_id); ?>
         </div>
     </div>
 
@@ -405,10 +414,7 @@ add_shortcode('danh_sach_ma_de', 'lb_ma_de_dashboard_shortcode');
 /**
  * Hàm render bảng danh sách mã đề.
  */
-function lb_render_ma_de_list_table($grader_dashboard_url, $tests_query) {
-    global $wpdb;
-    $submissions_table = $wpdb->prefix . 'lb_test_submissions';
-
+function lb_render_ma_de_list_table($grader_dashboard_url, $tests_query, $submissions_by_test_id) {
     if ($tests_query->have_posts()) {
         ?>
         <table class="gdv-table">
@@ -442,12 +448,9 @@ function lb_render_ma_de_list_table($grader_dashboard_url, $tests_query) {
                         $status_slug = 'ready';
                         $status_text = 'Sẵn sàng';
                     } else { // draft status
-                        $submission = $wpdb->get_row($wpdb->prepare(
-                            "SELECT submission_id, submitter_name, end_time, status FROM $submissions_table WHERE test_id = %d",
-                            $test_id
-                        ));
-
-                        if ($submission) {
+                        // Tối ưu hóa: Lấy dữ liệu từ map đã được truy vấn trước đó
+                        if (isset($submissions_by_test_id[$test_id])) {
+                            $submission = $submissions_by_test_id[$test_id];
                             $submission_id_for_delete = $submission->submission_id;
                             $submitter_html = '<td><strong>' . esc_html($submission->submitter_name) . '</strong></td>';
                             $end_time_html = '<td>' . wp_date('d/m/Y, H:i', strtotime($submission->end_time)) . '</td>';

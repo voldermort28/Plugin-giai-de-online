@@ -32,6 +32,7 @@ function lb_test_handle_frontend_grader_actions() {
 
         if (wp_verify_nonce($_POST['lb_test_grade_nonce'], 'lb_test_grade_action')) {
             $submission_id = intval($_POST['submission_id']);
+            $submitter_name = sanitize_text_field($_POST['submitter_name'] ?? '');
             $submitted_is_correct = $_POST['is_correct'] ?? [];
             $answers_table = $wpdb->prefix . 'lb_test_answers';
             
@@ -52,7 +53,11 @@ function lb_test_handle_frontend_grader_actions() {
 
             $wpdb->update(
                 $wpdb->prefix . 'lb_test_submissions',
-                ['score' => $final_correct_count, 'status' => 'graded'],
+                [
+                    'score' => $final_correct_count, 
+                    'status' => 'graded',
+                    'submitter_name' => $submitter_name
+                ],
                 ['submission_id' => $submission_id]
             );
             
@@ -205,7 +210,9 @@ function lb_test_render_grader_dashboard_shortcode() {
     if (isset($_GET['delete_status'])) echo '<div class="notice notice-error">Đã xóa bài thi thành công!</div>';
     
     if (isset($_GET['submission_id']) && is_numeric($_GET['submission_id'])) {
-        render_single_submission_grading_form(intval($_GET['submission_id']));
+        $submission_id = intval($_GET['submission_id']);
+        $view_mode = isset($_GET['view_mode']) ? sanitize_key($_GET['view_mode']) : 'regrade'; // Mặc định là chấm lại
+        render_single_submission_grading_form($submission_id, $view_mode);
     } else {
         render_grader_dashboard_tables();
     }
@@ -319,9 +326,28 @@ function render_grader_dashboard_tables() {
     echo '<h2 style="margin-top: 40px;">Lịch sử chấm bài</h2>';
     if ($graded_submissions) {
         echo '<div class="gdv-table-wrapper"><table class="gdv-table" id="graded-table"><thead><tr><th><input type="checkbox" class="gdv-select-all" data-table="graded-table"></th><th>ID</th><th>Bài thi</th><th>Tên thí sinh</th><th>Thời gian nộp</th><th>Điểm số</th><th>Hành động</th></tr></thead><tbody>';
+        
+        // --- Tối ưu hóa: Lấy tổng số câu hỏi cho tất cả các bài đã chấm trong 1 truy vấn ---
+        $submission_ids = wp_list_pluck($graded_submissions, 'submission_id');
+        $question_counts = [];
+        if (!empty($submission_ids)) {
+            $answers_table = $wpdb->prefix . 'lb_test_answers';
+            $results = $wpdb->get_results(
+                "SELECT submission_id, COUNT(answer_id) as total 
+                 FROM {$answers_table} 
+                 WHERE submission_id IN (" . implode(',', array_map('intval', $submission_ids)) . ") 
+                 GROUP BY submission_id"
+            );
+            // Tạo map để tra cứu: submission_id => total_questions
+            foreach ($results as $row) {
+                $question_counts[$row->submission_id] = $row->total;
+            }
+        }
+
         foreach ($graded_submissions as $sub) {
-            $total_questions_for_sub = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}lb_test_answers WHERE submission_id = %d", $sub->submission_id));
-            $review_url = add_query_arg('submission_id', $sub->submission_id, $page_url);
+            $total_questions_for_sub = $question_counts[$sub->submission_id] ?? 0;
+            $review_url = add_query_arg(['submission_id' => $sub->submission_id, 'view_mode' => 'review'], $page_url);
+            $regrade_url = add_query_arg(['submission_id' => $sub->submission_id, 'view_mode' => 'regrade'], $page_url);
             $delete_nonce = wp_create_nonce('lb_test_delete_submission_' . $sub->submission_id);
             $delete_url = add_query_arg(['action' => 'delete_submission', 'submission_id' => $sub->submission_id, '_wpnonce' => $delete_nonce], $page_url);
             echo '<tr>
@@ -331,14 +357,14 @@ function render_grader_dashboard_tables() {
                     <td><strong>' . esc_html($sub->submitter_name) . '</strong></td>
                     <td>' . wp_date('d/m/Y, H:i', strtotime($sub->end_time)) . '</td>
                     <td><strong><a href="' . esc_url($review_url) . '" class="gdv-action-link">' . intval($sub->score) . '/' . $total_questions_for_sub . '</a></strong></td>
-                    <td><a href="' . esc_url($review_url) . '" class="gdv-action-link">Xem lại</a> <a href="' . esc_url($delete_url) . '" class="gdv-action-link" style="color: var(--gdv-danger-text);" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td>
+                    <td><a href="' . esc_url($review_url) . '" class="gdv-action-link">Xem lại</a> | <a href="' . esc_url($regrade_url) . '" class="gdv-action-link">Chấm lại</a> | <a href="' . esc_url($delete_url) . '" class="gdv-action-link" style="color: var(--gdv-danger-text);" onclick="return confirm(\'Xóa vĩnh viễn?\');">Xóa</a></td>
                   </tr>';
         }
         echo '</tbody></table></div>';
     } else { echo '<p>Chưa có bài thi nào được chấm.</p>'; }
 }
 
-function render_single_submission_grading_form($submission_id) {
+function render_single_submission_grading_form($submission_id, $view_mode = 'regrade') {
     global $wpdb;
     $submission = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}lb_test_submissions WHERE submission_id = %d", $submission_id));
     if (!$submission) { echo '<p>Không tìm thấy bài làm.</p>'; return; }
@@ -346,14 +372,25 @@ function render_single_submission_grading_form($submission_id) {
     $is_graded = ($submission->status === 'graded');
 
     echo '<a href="' . esc_url(remove_query_arg('submission_id')) . '">&larr; Quay lại Dashboard</a>';
-    echo '<h1>Chấm bài thi #' . $submission_id . '</h1>';
-    echo '<h3>Thí sinh: ' . esc_html($submission->submitter_name) . '</h3>';
-    if ($is_graded) echo '<em>(Bài thi đã được chấm. Bạn đang ở chế độ xem lại.)</em>';
+    
+    $page_title = ($view_mode === 'review') ? 'Xem lại bài thi' : 'Chấm bài thi';
+    echo '<h1>' . $page_title . ' #' . $submission_id . '</h1>';
 
-    if (!$is_graded) echo '<form method="POST" action="">';
-    wp_nonce_field('lb_test_grade_action', 'lb_test_grade_nonce');
-    echo '<input type="hidden" name="action" value="grade_submission">';
-    echo '<input type="hidden" name="submission_id" value="' . $submission_id . '">';
+    // Hiển thị form nếu là chế độ chấm/chấm lại
+    if ($view_mode !== 'review') {
+        echo '<form method="POST" action="">';
+        wp_nonce_field('lb_test_grade_action', 'lb_test_grade_nonce');
+        echo '<input type="hidden" name="action" value="grade_submission">';
+        echo '<input type="hidden" name="submission_id" value="' . $submission_id . '">';
+        echo '<h3>Thí sinh: <input type="text" name="submitter_name" value="' . esc_attr($submission->submitter_name) . '" style="font-size: 1em; padding: 5px;"></h3>';
+        if ($is_graded) {
+            echo '<p><em>(Bạn đang ở chế độ chấm lại. Thay đổi sẽ được lưu khi bạn nhấn "Cập nhật điểm".)</em></p>';
+        }
+    } else {
+        // Chế độ chỉ đọc
+        echo '<h3>Thí sinh: ' . esc_html($submission->submitter_name) . '</h3>';
+        echo '<p><em>(Bạn đang ở chế độ xem lại. Không thể chỉnh sửa.)</em></p>';
+    }
     
     $count = 1;
     foreach ($answers as $answer) {
@@ -390,14 +427,27 @@ function render_single_submission_grading_form($submission_id) {
                 echo '<input type="hidden" name="is_correct[' . $answer->answer_id . ']" value="' . ($is_correct_in_db ? '1' : '0') . '">';
             } else { // Tự luận
                 echo '<div class="answer-box correct-answer"><strong>Đáp án mẫu:</strong><div>' . nl2br(esc_html($dap_an_mau)) . '</div></div>';
-                if (!$is_graded) {
+                
+                if ($view_mode !== 'review') {
+                    // Chế độ chấm/chấm lại: hiển thị checkbox
                     $checked = ($answer->is_correct == 1) ? 'checked' : '';
                     echo '<div class="grading-tick"><label><input type="checkbox" name="is_correct[' . $answer->answer_id . ']" value="1" ' . $checked . '> <strong>Đánh dấu câu trả lời này là Đúng</strong></label></div>';
+                } else {
+                    // Chế độ xem lại: hiển thị kết quả
+                    $is_correct_in_db = ($answer->is_correct == 1);
+                    $result_box_class = $is_correct_in_db ? 'correct-answer' : 'incorrect-answer';
+                    echo '<div class="answer-box ' . $result_box_class . '">';
+                    if ($is_correct_in_db) echo '<span class="result-correct">Thí sinh trả lời Đúng</span>';
+                    else echo '<span class="result-incorrect">Thí sinh trả lời Sai</span>'; // Mặc định câu chưa chấm (is_correct=2) là sai
+                    echo '</div>';
                 }
             }
             echo '</div>';
         }
     }
 
-    if (!$is_graded) { echo '<button type="submit" class="finish-button">Hoàn tất chấm bài</button></form>'; }
+    if ($view_mode !== 'review') {
+        $button_text = $is_graded ? 'Cập nhật điểm' : 'Hoàn tất chấm bài';
+        echo '<button type="submit" class="finish-button">' . $button_text . '</button></form>';
+    }
 }
