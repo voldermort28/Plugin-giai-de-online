@@ -108,6 +108,7 @@ function lb_test_render_import_page() {
 
     $lines_to_process = [];
     $form_submitted = false;
+    $plaintext_data_submitted = '';
 
     if (isset($_POST['lb_test_import_submit']) && check_admin_referer('lb_test_import_action', 'lb_test_import_nonce')) {
         $form_submitted = true;
@@ -124,7 +125,7 @@ function lb_test_render_import_page() {
     if (isset($_POST['lb_test_import_text_submit']) && check_admin_referer('lb_test_import_text_action', 'lb_test_import_text_nonce')) {
         $form_submitted = true;
         if (!empty($_POST['plaintext_data'])) {
-            $plaintext_data = stripslashes($_POST['plaintext_data']);
+            $plaintext_data = $plaintext_data_submitted = stripslashes($_POST['plaintext_data']);
             $lines_to_process = preg_split('/\\r\\n|\\r|\\n/', $plaintext_data);
         }
     }
@@ -169,7 +170,7 @@ function lb_test_render_import_page() {
     <h2>Cách 1: Import từ nội dung text</h2>
     <p>Dán nội dung câu hỏi của bạn vào khung bên dưới, mỗi câu hỏi một dòng, các cột phân cách bằng dấu chấm phẩy (<code>;</code>).</p>
     <form method="post" action="">
-        <textarea name="plaintext_data" rows="15" style="width:100%; font-family: monospace;"></textarea>
+        <textarea name="plaintext_data" rows="15" style="width:100%; font-family: monospace;"><?php echo esc_textarea($plaintext_data_submitted); ?></textarea>
         <?php wp_nonce_field('lb_test_import_text_action', 'lb_test_import_text_nonce'); ?>
         <?php submit_button('Import từ Text', 'primary', 'lb_test_import_text_submit'); ?>
     </form>

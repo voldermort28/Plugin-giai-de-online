@@ -87,9 +87,11 @@ function lb_cleanup_submissions_on_test_delete($post_id) {
 
     if (!empty($submission_ids)) {
         // Xóa tất cả các câu trả lời liên quan
-        $wpdb->query("DELETE FROM $answers_table WHERE submission_id IN (" . implode(',', $submission_ids) . ")");
+        $placeholders = implode(',', array_fill(0, count($submission_ids), '%d'));
+        $wpdb->query($wpdb->prepare("DELETE FROM $answers_table WHERE submission_id IN ($placeholders)", $submission_ids));
+
         // Xóa tất cả các bài làm liên quan
-        $wpdb->query("DELETE FROM $submissions_table WHERE test_id = $post_id");
+        $wpdb->delete($submissions_table, ['test_id' => $post_id], ['%d']);
     }
 }
 add_action('before_delete_post', 'lb_cleanup_submissions_on_test_delete');

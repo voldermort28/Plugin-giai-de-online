@@ -34,6 +34,7 @@ function lb_test_handle_frontend_grader_actions() {
             $submission_id = intval($_POST['submission_id']);
             $submitter_name = sanitize_text_field($_POST['submitter_name'] ?? '');
             $submitted_is_correct = $_POST['is_correct'] ?? [];
+            $final_correct_count = 0;
             $answers_table = $wpdb->prefix . 'lb_test_answers';
             
             $all_answers_in_db = $wpdb->get_results($wpdb->prepare("SELECT answer_id FROM $answers_table WHERE submission_id = %d", $submission_id));
@@ -41,15 +42,17 @@ function lb_test_handle_frontend_grader_actions() {
             foreach ($all_answers_in_db as $db_answer) {
                 $answer_id = $db_answer->answer_id;
                 $is_correct_status = (isset($submitted_is_correct[$answer_id]) && $submitted_is_correct[$answer_id] == '1') ? 1 : 0;
-                
+
                 $wpdb->update(
                     $answers_table,
                     ['is_correct' => $is_correct_status],
                     ['answer_id' => $answer_id]
                 );
+
+                if ($is_correct_status === 1) {
+                    $final_correct_count++;
+                }
             }
-            
-            $final_correct_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $answers_table WHERE submission_id = %d AND is_correct = 1", $submission_id));
 
             $wpdb->update(
                 $wpdb->prefix . 'lb_test_submissions',
