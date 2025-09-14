@@ -33,6 +33,23 @@ function lb_render_leaderboard_page() {
     $current_contest = isset($_GET['contest_filter']) ? sanitize_text_field($_GET['contest_filter']) : '';
     $leaderboard_data = [];
 
+    // Nếu không có cuộc thi nào được chọn qua GET, hãy tìm cuộc thi gần đây nhất để hiển thị theo mặc định.
+    if (empty($current_contest) && !empty($contest_names)) {
+        $latest_contest_name = $wpdb->get_var($wpdb->prepare(
+            "SELECT pm.meta_value
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            WHERE p.post_type = 'dethi_baikiemtra'
+            AND pm.meta_key = %s
+            ORDER BY p.post_date DESC
+            LIMIT 1",
+            $contest_meta_key
+        ));
+        if ($latest_contest_name) {
+            $current_contest = $latest_contest_name;
+        }
+    }
+
     // --- Truy vấn dữ liệu bảng xếp hạng nếu có cuộc thi được chọn ---
     if (!empty($current_contest)) {
         $submissions_table = $wpdb->prefix . 'lb_test_submissions';
@@ -105,44 +122,96 @@ function lb_render_leaderboard_page() {
         </div>
 
         <?php if (!empty($current_contest)) : ?>
-            <div class="gdv-table-wrapper">
-                <table class="gdv-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 80px; text-align: center;">Hạng</th>
-                            <th>Tên Thí Sinh</th>
-                            <th style="text-align: center;">Số bài đã làm</th>
-                            <th style="text-align: right;">Điểm Trung Bình</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($leaderboard_data)) : ?>
-                            <?php $rank = 1; ?>
-                            <?php foreach ($leaderboard_data as $row) : ?>
-                                <tr class="rank-row-<?php echo $rank; ?>">
-                                    <td class="gdv-rank gdv-rank-<?php echo $rank <= 3 ? $rank : 'other'; ?>">
-                                        <?php echo $rank; ?>
-                                    </td>
-                                    <td>
-                                        <strong>
-                                            <a href="<?php echo esc_url(site_url('/hosothisinh/?contestant_id=' . $row->contestant_id)); ?>" class="gdv-action-link"><?php echo esc_html($row->display_name); ?></a>
-                                        </strong>
-                                    </td>
-                                    <td style="text-align: center;"><?php echo intval($row->tests_taken); ?></td>
-                                    <td style="text-align: right; font-weight: bold; font-size: 1.1em; color: var(--gdv-primary);">
-                                        <?php echo esc_html($row->average_score); ?>
-                                    </td>
-                                </tr>
-                                <?php $rank++; ?>
-                            <?php endforeach; ?>
-                        <?php else : ?>
+            <?php if (!empty($leaderboard_data)) : ?>
+                <?php
+                // --- Chuẩn bị dữ liệu cho biểu đồ (Top 10) ---
+                $chart_data = array_slice($leaderboard_data, 0, 10);
+                $chart_labels = wp_list_pluck($chart_data, 'display_name');
+                $chart_scores = wp_list_pluck($chart_data, 'average_score');
+
+                // --- Mảng màu sắc cho biểu đồ, đồng bộ với màu rank ---
+                $background_colors = [
+                    'rgba(212, 175, 55, 0.6)', // Gold for Rank 1
+                    'rgba(192, 192, 192, 0.6)', // Silver for Rank 2
+                    'rgba(205, 127, 50, 0.6)',  // Bronze for Rank 3
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)',
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(83, 102, 255, 0.6)',
+                    'rgba(40, 159, 64, 0.6)',
+                ];
+                $border_colors = [
+                    'rgba(212, 175, 55, 1)',
+                    'rgba(192, 192, 192, 1)',
+                    'rgba(205, 127, 50, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)',
+                ];
+                ?>
+                <div class="gdv-chart-wrapper" style="background: var(--gdv-white); padding: 20px; border-radius: 12px; border: 1px solid var(--gdv-border); margin-bottom: 20px;">
+                    <h2 style="margin-top: 0;">Top 10 Thí sinh</h2>
+                    <div style="position: relative; height:400px;">
+                        <canvas id="leaderboardChart"></canvas>
+                    </div>
+                </div>
+
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const ctx = document.getElementById('leaderboardChart').getContext('2d');
+                    const leaderboardChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: <?php echo json_encode($chart_labels); ?>,
+                            datasets: [{
+                                label: 'Điểm Trung Bình',
+                                data: <?php echo json_encode($chart_scores); ?>,
+                                backgroundColor: <?php echo json_encode($background_colors); ?>,
+                                borderColor: <?php echo json_encode($border_colors); ?>,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: { y: { beginAtZero: true, suggestedMax: 10 } },
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                });
+                </script>
+
+                <div class="gdv-table-wrapper">
+                    <table class="gdv-table">
+                        <thead>
                             <tr>
-                                <td colspan="4" style="text-align: center; padding: 30px;">Chưa có dữ liệu chấm bài cho cuộc thi này.</td>
+                                <th style="width: 80px; text-align: center;">Hạng</th>
+                                <th>Tên Thí Sinh</th>
+                                <th style="text-align: center;">Số bài đã làm</th>
+                                <th style="text-align: right;">Điểm Trung Bình</th>
                             </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            <?php $rank = 1; foreach ($leaderboard_data as $row) : ?>
+                                <tr class="rank-row-<?php echo $rank; ?>">
+                                    <td class="gdv-rank gdv-rank-<?php echo $rank <= 3 ? $rank : 'other'; ?>"><?php echo $rank; ?></td>
+                                    <td><strong><a href="<?php echo esc_url(site_url('/hosothisinh/?contestant_id=' . $row->contestant_id)); ?>" class="gdv-action-link"><?php echo esc_html($row->display_name); ?></a></strong></td>
+                                    <td style="text-align: center;"><?php echo intval($row->tests_taken); ?></td>
+                                    <td style="text-align: right; font-weight: bold; font-size: 1.1em; color: var(--gdv-primary);"><?php echo esc_html($row->average_score); ?></td>
+                                </tr>
+                            <?php $rank++; endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else : ?>
+                <div style="text-align: center; padding: 30px; background: var(--gdv-white); border: 1px solid var(--gdv-border); border-radius: 12px;">Chưa có dữ liệu chấm bài cho cuộc thi này.</div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
     <?php
