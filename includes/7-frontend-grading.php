@@ -7,6 +7,21 @@ if (!defined('ABSPATH')) exit;
  * ===================================================================
  */
 function lb_test_handle_frontend_grader_actions() {
+    // --- BẢO VỆ TRANG: Yêu cầu đăng nhập để xem các trang của giám khảo ---
+    // Các trang này bao gồm Chấm bài, Danh sách đề, Bảng xếp hạng và Hồ sơ thí sinh.
+    if ( ! is_user_logged_in() && ( is_page('chamdiem') || is_page('code') || is_page('bxh') || is_page('hosothisinh') ) ) {
+        
+        // Lấy URL hiện tại để chuyển hướng người dùng trở lại sau khi đăng nhập.
+        $redirect_url = home_url( $_SERVER['REQUEST_URI'] );
+        
+        // Tạo URL đăng nhập và đính kèm URL chuyển hướng.
+        $login_url = wp_login_url( $redirect_url );
+        
+        // Thực hiện chuyển hướng và kết thúc thực thi.
+        wp_safe_redirect( $login_url );
+        exit;
+    }
+
     if (is_admin()) return;
     global $wpdb;
 
