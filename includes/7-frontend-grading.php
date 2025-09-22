@@ -295,11 +295,14 @@ function render_single_submission_grading_form($submission_id, $view_mode = 'reg
 
     // Hiển thị form nếu là chế độ chấm/chấm lại
     if ($view_mode !== 'review') {
+        $button_text = $is_graded ? 'Cập nhật điểm' : 'Hoàn tất chấm bài';
         echo '<form method="POST" action="">';
         wp_nonce_field('lb_test_grade_action', 'lb_test_grade_nonce');
         echo '<input type="hidden" name="action" value="grade_submission">';
         echo '<input type="hidden" name="submission_id" value="' . $submission_id . '">';
         echo '<h3>Thí sinh: <input type="text" name="submitter_name" value="' . esc_attr($submission->final_submitter_name) . '" style="font-size: 1em; padding: 5px;"></h3>';
+        // Thêm nút submit ở đầu form
+        echo '<button type="submit" class="finish-button" style="margin-bottom: 20px;">' . $button_text . '</button>';
         if ($is_graded) {
             echo '<p><em>(Bạn đang ở chế độ chấm lại. Thay đổi sẽ được lưu khi bạn nhấn "Cập nhật điểm".)</em></p>';
         }
@@ -371,7 +374,6 @@ function render_single_submission_grading_form($submission_id, $view_mode = 'reg
     }
 
     if ($view_mode !== 'review') {
-        $button_text = $is_graded ? 'Cập nhật điểm' : 'Hoàn tất chấm bài';
         echo '<button type="submit" class="finish-button">' . $button_text . '</button></form>';
     }
 }

@@ -162,19 +162,22 @@ function lb_handle_bulk_delete() {
     if ($delete_type === 'submission') {
         $submissions_table = $wpdb->prefix . 'lb_test_submissions';
         $answers_table = $wpdb->prefix . 'lb_test_answers';
+        $test_ids_to_update = [];
 
         foreach ($item_ids as $submission_id) {
             // Lấy test_id trước khi xóa để cập nhật lại trạng thái
             $test_id = $wpdb->get_var($wpdb->prepare("SELECT test_id FROM $submissions_table WHERE submission_id = %d", $submission_id));
+            if ($test_id) {
+                $test_ids_to_update[] = $test_id;
+            }
 
             // Xóa câu trả lời và bài làm
             $wpdb->delete($answers_table, ['submission_id' => $submission_id]);
             $wpdb->delete($submissions_table, ['submission_id' => $submission_id]);
-
-            // Cập nhật lại trạng thái của đề thi thành 'publish' (Sẵn sàng)
-            if ($test_id) {
-                wp_update_post(['ID' => $test_id, 'post_status' => 'publish']);
-            }
+        }
+        // Cập nhật lại trạng thái của các đề thi thành 'publish' (Sẵn sàng)
+        foreach (array_unique($test_ids_to_update) as $test_id) {
+            wp_update_post(['ID' => $test_id, 'post_status' => 'publish']);
         }
         wp_send_json_success(['message' => 'Đã xóa các bài làm đã chọn và đặt lại trạng thái đề thi.']);
 
