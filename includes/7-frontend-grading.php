@@ -376,11 +376,17 @@ function render_single_submission_grading_form($submission_id, $view_mode = 'reg
                     echo '<div class="grading-tick"><label><input type="checkbox" name="is_correct[' . $answer->answer_id . ']" value="1" ' . $checked . '> <strong>Đánh dấu câu trả lời này là Đúng</strong></label></div>';
                 } else {
                     // Chế độ xem lại: hiển thị kết quả
-                    $is_correct_in_db = ($answer->is_correct == 1);
-                    $result_box_class = $is_correct_in_db ? 'correct-answer' : 'incorrect-answer';
+                    $result_text = '<span class="result-incorrect">Thí sinh trả lời Sai</span>'; // Mặc định là sai
+                    $result_box_class = 'incorrect-answer';
+                    if ($answer->is_correct == 1) {
+                        $result_text = '<span class="result-correct">Thí sinh trả lời Đúng</span>';
+                        $result_box_class = 'correct-answer';
+                    } elseif ($answer->is_correct == 2) {
+                        $result_text = '<span style="color: #fbc02d; font-weight: bold;">Chưa chấm</span>';
+                        $result_box_class = 'pending-answer';
+                    }
                     echo '<div class="answer-box ' . $result_box_class . '">';
-                    if ($is_correct_in_db) echo '<span class="result-correct">Thí sinh trả lời Đúng</span>';
-                    else echo '<span class="result-incorrect">Thí sinh trả lời Sai</span>'; // Mặc định câu chưa chấm (is_correct=2) là sai
+                    echo $result_text;
                     echo '</div>';
                 }
             }
