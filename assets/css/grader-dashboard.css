@@ -396,3 +396,68 @@
         padding: 10px;
     }
 }
+
+/* ==========================================================================
+   Custom Login Form (wp_login_form)
+   ========================================================================== */
+.gdv-container #loginform {
+    max-width: 420px;
+    margin: 40px auto;
+    padding: 40px;
+    background: var(--gdv-white);
+    border: 1px solid var(--gdv-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.gdv-container #loginform p {
+    margin-bottom: 1.2em;
+}
+
+.gdv-container #loginform label {
+    display: block;
+    font-weight: 500;
+    color: var(--gdv-text-primary);
+    margin-bottom: 8px;
+}
+
+.gdv-container #loginform .input { /* wp_login_form uses class 'input' */
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--gdv-border);
+    background-color: var(--gdv-white);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box; /* Important */
+}
+
+.gdv-container #loginform .input:focus {
+    border-color: var(--gdv-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    outline: none;
+}
+
+.gdv-container #loginform .login-remember label {
+    display: inline-flex;
+    align-items: center;
+    font-weight: normal;
+    color: var(--gdv-text-secondary);
+    cursor: pointer;
+}
+
+.gdv-container #loginform #rememberme {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+}
+
+.gdv-container #loginform #wp-submit {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px 20px;
+}
+
+.gdv-container .login-lost-password {
+    text-align: center;
+}

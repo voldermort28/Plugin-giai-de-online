@@ -7,20 +7,23 @@ if (!defined('ABSPATH')) exit;
  * ===================================================================
  */
 function lb_test_handle_frontend_grader_actions() {
-    // --- BẢO VỆ TRANG: Yêu cầu đăng nhập để xem các trang của giám khảo ---
-    // Các trang này bao gồm Chấm bài, Danh sách đề, Bảng xếp hạng và Hồ sơ thí sinh.
-    if ( ! is_user_logged_in() && ( is_page('chamdiem') || is_page('code') || is_page('bxh') || is_page('hosothisinh') ) ) {
-        
-        // Lấy URL hiện tại để chuyển hướng người dùng trở lại sau khi đăng nhập.
-        $redirect_url = home_url( $_SERVER['REQUEST_URI'] );
-        
-        // Tạo URL đăng nhập và đính kèm URL chuyển hướng.
-        $login_url = wp_login_url( $redirect_url );
-        
-        // Thực hiện chuyển hướng và kết thúc thực thi.
-        wp_safe_redirect( $login_url );
-        exit;
-    }
+    /*
+     * --- BẢO VỆ TRANG: Yêu cầu đăng nhập để xem các trang của giám khảo ---
+     * Logic này đã được chuyển vào bên trong từng shortcode để hiển thị form đăng nhập tại chỗ.
+     * Đoạn code này được giữ lại nhưng vô hiệu hóa để tham khảo.
+     * if ( ! is_user_logged_in() && ( is_page('chamdiem') || is_page('code') || is_page('bxh') || is_page('hosothisinh') ) ) {
+     *
+     *     // Lấy URL hiện tại để chuyển hướng người dùng trở lại sau khi đăng nhập.
+     *     $redirect_url = home_url( $_SERVER['REQUEST_URI'] );
+     *
+     *     // Tạo URL đăng nhập và đính kèm URL chuyển hướng.
+     *     $login_url = wp_login_url( $redirect_url );
+     *
+     *     // Thực hiện chuyển hướng và kết thúc thực thi.
+     *     wp_safe_redirect( $login_url );
+     *     exit;
+     * }
+    */
 
     if (is_admin()) return;
     global $wpdb;
@@ -95,7 +98,29 @@ add_action('template_redirect', 'lb_test_handle_frontend_grader_actions');
  * ===================================================================
  */
 function lb_test_render_grader_dashboard_shortcode() {
-    if (!current_user_can('grade_submissions')) return '<p>Bạn không có quyền truy cập trang này.</p>';
+    // Bước 1: Kiểm tra đăng nhập. Nếu chưa, hiển thị form đăng nhập.
+    if (!is_user_logged_in()) {
+        ob_start();
+        echo '<div class="gdv-container">';
+        echo '<h2 style="text-align: center;">Vui lòng đăng nhập</h2>';
+        echo '<p style="text-align: center;">Bạn cần đăng nhập với tài khoản Giám khảo để xem trang này.</p>';
+        wp_login_form([
+            'echo'           => true,
+            'redirect'       => home_url($_SERVER['REQUEST_URI']),
+            'label_username' => __('Tên tài khoản hoặc Email'),
+            'label_password' => __('Mật khẩu'),
+            'label_remember' => __('Ghi nhớ'),
+            'label_log_in'   => __('Đăng nhập'),
+        ]);
+        echo '<p class="login-lost-password"><a href="' . esc_url(wp_lostpassword_url()) . '">' . __('Quên mật khẩu?') . '</a></p>';
+        echo '</div>';
+        return ob_get_clean();
+    }
+
+    // Bước 2: Kiểm tra quyền hạn.
+    if (!current_user_can('grade_submissions')) {
+        return '<div class="gdv-container"><p>Bạn không có quyền truy cập trang này.</p></div>';
+    }
     ob_start();
     ?>
     <div class="gdv-container">
