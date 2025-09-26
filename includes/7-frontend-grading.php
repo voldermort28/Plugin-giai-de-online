@@ -97,39 +97,21 @@ add_action('template_redirect', 'lb_test_handle_frontend_grader_actions');
  * CÁC HÀM HIỂN THỊ GIAO DIỆN QUA SHORTCODE
  * ===================================================================
  */
-function lb_test_render_grader_dashboard_shortcode() {
-    // Bước 1: Kiểm tra đăng nhập. Nếu chưa, hiển thị form đăng nhập.
-    if (!is_user_logged_in()) {
-        ob_start();
-        echo '<div class="gdv-container">';
-        echo '<h2 style="text-align: center;">Vui lòng đăng nhập</h2>';
-        echo '<p style="text-align: center;">Bạn cần đăng nhập với tài khoản Giám khảo để xem trang này.</p>';
-        wp_login_form([
-            'echo'           => true,
-            'redirect'       => home_url($_SERVER['REQUEST_URI']),
-            'label_username' => __('Tên tài khoản hoặc Email'),
-            'label_password' => __('Mật khẩu'),
-            'label_remember' => __('Ghi nhớ'),
-            'label_log_in'   => __('Đăng nhập'),
-        ]);
-        echo '<p class="login-lost-password"><a href="' . esc_url(wp_lostpassword_url()) . '">' . __('Quên mật khẩu?') . '</a></p>';
-        echo '</div>';
-        return ob_get_clean();
+function lb_test_render_grader_dashboard_shortcode()
+{
+    // Bước 1: Kiểm tra đăng nhập và hiển thị form nếu cần.
+    if (lb_test_render_grader_login_form()) {
+        return; // Dừng hàm nếu form đăng nhập đã được hiển thị.
     }
 
-    // Bước 2: Kiểm tra quyền hạn.
+    // Bước 2: Kiểm tra quyền hạn
     if (!current_user_can('grade_submissions')) {
         return '<div class="gdv-container"><p>Bạn không có quyền truy cập trang này.</p></div>';
     }
     ob_start();
     ?>
     <div class="gdv-container">
-        <div class="gdv-main-tabs">
-            <a href="<?php echo esc_url(get_site_url(null, '/chamdiem/')); ?>" class="gdv-main-tab active">Chấm Bài & Lịch Sử</a>
-            <a href="<?php echo esc_url(get_site_url(null, '/code/')); ?>" class="gdv-main-tab">Danh Sách Đề Thi</a>
-            <a href="<?php echo esc_url(get_site_url(null, '/bxh/')); ?>" class="gdv-main-tab">Bảng Xếp Hạng</a>
-            <a href="<?php echo esc_url(site_url('/hosothisinh/')); ?>" class="gdv-main-tab">Hồ sơ Thí sinh</a>
-        </div>
+        <?php lb_test_render_grader_main_tabs('chamdiem'); ?>
     <?php
     if (isset($_GET['grading_status'])) echo '<div class="gdv-notice success">Chấm bài thi #' . intval($_GET['graded_id']) . ' thành công!</div>';
     if (isset($_GET['delete_status'])) echo '<div class="gdv-notice error">Đã xóa bài thi thành công!</div>';

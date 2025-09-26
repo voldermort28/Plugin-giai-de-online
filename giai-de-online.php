@@ -90,6 +90,7 @@ register_activation_hook(__FILE__, 'lb_test_activate_plugin');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/1-post-types.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/2-metaboxes.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/3-admin-columns.php');
+include_once(LB_TEST_PLUGIN_PATH . 'includes/template-helpers.php'); // Nạp file tiện ích lên trước
 include_once(LB_TEST_PLUGIN_PATH . 'includes/4-shortcode.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/5-ajax-handlers.php');
 include_once(LB_TEST_PLUGIN_PATH . 'includes/7-frontend-grading.php');

@@ -9,26 +9,12 @@ if (!defined('ABSPATH')) exit;
  * ===================================================================
  */
 function lb_test_render_contestant_profile_shortcode() {
-    // Bước 1: Kiểm tra đăng nhập. Nếu chưa, hiển thị form đăng nhập.
-    if (!is_user_logged_in()) {
-        ob_start();
-        echo '<div class="gdv-container">';
-        echo '<h2 style="text-align: center;">Vui lòng đăng nhập</h2>';
-        echo '<p style="text-align: center;">Bạn cần đăng nhập với tài khoản Giám khảo để xem trang này.</p>';
-        wp_login_form([
-            'echo'           => true,
-            'redirect'       => home_url($_SERVER['REQUEST_URI']),
-            'label_username' => __('Tên tài khoản hoặc Email'),
-            'label_password' => __('Mật khẩu'),
-            'label_remember' => __('Ghi nhớ'),
-            'label_log_in'   => __('Đăng nhập'),
-        ]);
-        echo '<p class="login-lost-password"><a href="' . esc_url(wp_lostpassword_url()) . '">' . __('Quên mật khẩu?') . '</a></p>';
-        echo '</div>';
-        return ob_get_clean();
+    // Bước 1: Kiểm tra đăng nhập và hiển thị form nếu cần.
+    if (lb_test_render_grader_login_form()) {
+        return; // Dừng hàm nếu form đăng nhập đã được hiển thị.
     }
 
-    // Bước 2: Kiểm tra quyền hạn.
+    // Bước 2: Kiểm tra quyền hạn
     if (!current_user_can('grade_submissions')) {
         return '<div class="gdv-container"><p>Bạn không có quyền truy cập trang này.</p></div>';
     }
@@ -36,12 +22,7 @@ function lb_test_render_contestant_profile_shortcode() {
     ob_start();
     ?>
     <div class="gdv-container">
-        <div class="gdv-main-tabs">
-            <a href="<?php echo esc_url(site_url('/chamdiem/')); ?>" class="gdv-main-tab">Chấm Bài & Lịch Sử</a>
-            <a href="<?php echo esc_url(site_url('/code/')); ?>" class="gdv-main-tab">Danh Sách Đề Thi</a>
-            <a href="<?php echo esc_url(site_url('/bxh/')); ?>" class="gdv-main-tab">Bảng Xếp Hạng</a>
-            <a href="<?php echo esc_url(site_url('/hosothisinh/')); ?>" class="gdv-main-tab active">Hồ sơ Thí sinh</a>
-        </div>
+        <?php lb_test_render_grader_main_tabs('hosothisinh'); ?>
     <?php
     lb_test_render_contestant_profile_content();
     echo '</div>';
