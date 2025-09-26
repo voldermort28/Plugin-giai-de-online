@@ -461,3 +461,12 @@
 .gdv-container .login-lost-password {
     text-align: center;
 }
+
+/* Thêm style cho thông báo lỗi của form đăng nhập SĐT */
+.gdv-container .lb-phone-login-form .login-error {
+    border-left: 4px solid #dc3545;
+    padding: 12px;
+    margin-left: 0;
+    margin-bottom: 16px;
+    background-color: #f8d7da;
+}

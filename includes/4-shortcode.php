@@ -79,6 +79,9 @@ function display_initial_form($name_error = false, $code_error = false, $ma_de =
 
             <button type="submit">Bắt đầu làm bài</button>
         </form>
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="<?php echo esc_url(site_url('/ketqua/')); ?>">Xem bảng xếp hạng cuộc thi &rarr;</a>
+        </p>
     </div>
     <?php
 }
