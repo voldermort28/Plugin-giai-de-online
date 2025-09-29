@@ -275,15 +275,22 @@ function render_single_submission_grading_form($submission_id, $view_mode = 'reg
             echo '<div class="answer-box student-answer ' . $student_answer_extra_class . '"><strong>Câu trả lời của thí sinh:</strong><div>' . nl2br(esc_html($student_answer_full_text)) . '</div></div>';
 
             if ($loai_cau_hoi === 'trac_nghiem') {
-                $is_correct_in_db = ($answer->is_correct == 1);
-                $correct_answer_box_class = $is_correct_in_db ? 'correct-answer' : 'incorrect-answer';
+                // SỬA LỖI: Luôn so sánh lại câu trả lời với đáp án mới nhất, không dựa vào giá trị is_correct trong DB.
+                // Điều này đảm bảo khi admin đổi đáp án, kết quả chấm sẽ được cập nhật theo.
+                $clean_user_answer = preg_replace('/[^A-Z]/', '', strtoupper($answer->user_answer));
+                $clean_correct_answer = preg_replace('/[^A-Z]/', '', strtoupper($dap_an_mau));
+                $is_now_correct = (!empty($clean_user_answer) && $clean_user_answer === $clean_correct_answer);
+
+                $correct_answer_box_class = $is_now_correct ? 'correct-answer' : 'incorrect-answer';
                 $correct_answer_full_text = isset($lua_chon[$dap_an_mau]) ? ($dap_an_mau . '. ' . $lua_chon[$dap_an_mau]) : $dap_an_mau;
 
                 echo '<div class="answer-box ' . $correct_answer_box_class . '"><strong>Đáp án đúng:</strong> ' . esc_html($correct_answer_full_text) . ' &mdash; ';
-                if ($is_correct_in_db) echo '<span class="result-correct">Thí sinh trả lời Đúng</span>';
+                if ($is_now_correct) echo '<span class="result-correct">Thí sinh trả lời Đúng</span>';
                 else echo '<span class="result-incorrect">Thí sinh trả lời Sai</span>';
                 echo '</div>';
-                echo '<input type="hidden" name="is_correct[' . $answer->answer_id . ']" value="' . ($is_correct_in_db ? '1' : '0') . '">';
+
+                // Giá trị của hidden input cũng phải được cập nhật theo kết quả so sánh mới nhất.
+                echo '<input type="hidden" name="is_correct[' . $answer->answer_id . ']" value="' . ($is_now_correct ? '1' : '0') . '">';
             } else { // Tự luận
                 echo '<div class="answer-box correct-answer"><strong>Đáp án mẫu:</strong><div>' . nl2br(esc_html($dap_an_mau)) . '</div></div>';
                 
