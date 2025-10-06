@@ -1,0 +1,331 @@
+/* ==========================================================================
+   Grader Dashboard - Main Design System
+   ========================================================================== */
+/* --- Variables --- */
+:root {
+    --gdv-bg: #f9fafb; /* Light gray background */
+    --gdv-white: #ffffff;
+    --gdv-primary: #4f46e5; /* Vibrant Indigo */
+    --gdv-text-primary: #111827; /* Dark Gray for text */
+    --gdv-text-secondary: #6b7280; /* Medium Gray for secondary text */
+    --gdv-border: #e5e7eb; /* Light Gray for borders */
+    --gdv-status-ready-bg: #d1e7dd;
+    --gdv-status-ready-text: #0f5132;
+    --gdv-status-submitted-bg: #fff3cd;
+    --gdv-status-submitted-text: #664d03;
+    --gdv-status-graded-bg: #cff4fc;
+    --gdv-status-graded-text: #055160;
+    --gdv-danger-bg: #f8d7da;
+    --gdv-danger-text: #842029;
+}
+
+/* --- Main Layout --- */
+body {
+    background-color: var(--gdv-bg);
+    color: var(--gdv-text-primary);
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.gdv-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--gdv-white);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.gdv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.gdv-header h1 {
+    font-size: 24px;
+    color: var(--gdv-text-primary);
+    margin: 0;
+}
+
+.gdv-description {
+    color: var(--gdv-text-secondary);
+    margin-top: 4px;
+    margin-bottom: 20px;
+}
+
+.gdv-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* --- Search Box --- */
+.gdv-search-box {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+}
+
+.gdv-search-box input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--gdv-border);
+    background-color: var(--gdv-white);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.gdv-search-box input:focus {
+    border-color: var(--gdv-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    outline: none;
+}
+
+/* --- Filter Tabs --- */
+.gdv-tabs {
+    display: inline-flex;
+    list-style: none;
+    margin: 0;
+    padding: 5px;
+    background-color: #f3f4f6;
+    border-radius: 9999px;
+    border: 1px solid var(--gdv-border);
+}
+
+.gdv-tabs li {
+    padding: 8px 16px;
+    border-radius: 9999px;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--gdv-text-secondary);
+    background-color: transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.gdv-tabs li.active {
+    background-color: var(--gdv-primary);
+    color: var(--gdv-white);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+.gdv-tabs li:not(.active):hover {
+    background-color: #e5e7eb;
+}
+
+/* --- Tables --- */
+.gdv-table-wrapper {
+    background-color: var(--gdv-white);
+    border-radius: 12px;
+    overflow-x: auto;
+    border: 1px solid var(--gdv-border);
+}
+
+.gdv-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gdv-table th, .gdv-table td {
+    padding: 16px 24px;
+    text-align: left;
+    border-bottom: 1px solid var(--gdv-border);
+    color: var(--gdv-text-secondary);
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.gdv-table th {
+    color: var(--gdv-text-primary);
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+    background-color: #f9fafb;
+}
+
+.gdv-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.gdv-table tbody tr:hover {
+    background-color: #fafbff;
+}
+
+.gdv-table td strong {
+    color: var(--gdv-text-primary);
+    font-weight: 500;
+}
+
+/* --- Avatar in Table --- */
+.gdv-avatar-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gdv-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--gdv-primary);
+    color: var(--gdv-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.gdv-avatar-info .name {
+    color: var(--gdv-text-primary);
+    font-weight: 600;
+}
+.gdv-avatar-info .subtext {
+    color: var(--gdv-text-secondary);
+    font-size: 12px;
+}
+
+/* --- Components --- */
+.gdv-button {
+    display: inline-block;
+    background-color: var(--gdv-primary);
+    color: var(--gdv-white) !important;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.gdv-button:hover {
+    background-color: #4338ca;
+}
+
+.gdv-action-link {
+    color: var(--gdv-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+.gdv-action-link:hover {
+    text-decoration: underline;
+}
+
+.gdv-button.secondary {
+    background-color: var(--gdv-white);
+    color: var(--gdv-text-primary) !important;
+    border: 1px solid var(--gdv-border);
+}
+.gdv-button.secondary:hover {
+    background-color: #f9fafb;
+}
+
+.gdv-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.gdv-status::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    background-color: currentColor;
+}
+
+.gdv-status--ready, .gdv-status--graded { background-color: var(--gdv-status-ready-bg); color: var(--gdv-status-ready-text); }
+.gdv-status--submitted { background-color: var(--gdv-status-submitted-bg); color: var(--gdv-status-submitted-text); }
+.gdv-status--tu_luan { background-color: #e7e5e4; color: #57534e; }
+.gdv-status--trac_nghiem { background-color: #dbeafe; color: #1e40af; }
+.gdv-status--admin { background-color: #fee2e2; color: #991b1b; }
+.gdv-status--grader { background-color: #dcfce7; color: #166534; }
+
+/* --- Forms --- */
+form p {
+    margin-bottom: 1.5em;
+}
+
+form label {
+    display: block;
+    font-weight: 500;
+    color: var(--gdv-text-primary);
+    margin-bottom: 8px;
+}
+
+form .input, form select, form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--gdv-border);
+    background-color: var(--gdv-white);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+form .input:focus, form select:focus, form textarea:focus {
+    border-color: var(--gdv-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    outline: none;
+}
+
+/* ==========================================================================
+   Custom Login Form
+   ========================================================================== */
+.lb-login-form #loginform {
+    max-width: 420px;
+    margin: 40px auto;
+    padding: 40px;
+    background: var(--gdv-white);
+    border: 1px solid var(--gdv-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.lb-login-form #loginform h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.lb-login-form #loginform #wp-submit {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px 20px;
+}
+
+/* --- Responsive --- */
+@media screen and (max-width: 768px) {
+    .gdv-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .gdv-table th, .gdv-table td {
+        white-space: nowrap;
+    }
+    .gdv-toolbar, .gdv-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .gdv-search-box {
+        max-width: 100%;
+    }
+    .gdv-container {
+        padding: 15px;
+        margin: 10px;
+    }
+}
