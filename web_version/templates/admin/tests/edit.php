@@ -5,7 +5,6 @@ $test_id = $_GET['id'] ?? null;
 $is_editing = ($test_id !== null);
 
 $page_title = $is_editing ? 'Sửa Bài kiểm tra' : 'Thêm Bài kiểm tra mới';
-include APP_ROOT . '/templates/partials/header.php';
 
 $test_data = ['title' => '', 'ma_de' => '', 'time_limit' => 60];
 
@@ -13,7 +12,7 @@ if ($is_editing) {
     $test_data = $db->fetch("SELECT * FROM tests WHERE test_id = ?", [$test_id]);
     if (!$test_data) {
         set_message('error', 'Không tìm thấy bài kiểm tra.');
-        redirect('/admin/tests');
+        redirect('/grader/tests');
     }
 }
 
@@ -40,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         set_message('success', $is_editing ? 'Cập nhật bài kiểm tra thành công.' : 'Thêm bài kiểm tra mới thành công.');
-        redirect('/admin/tests');
+        redirect('/grader/tests');
     } catch (PDOException $e) {
         if ($e->errorInfo[1] == 1062) {
             set_message('error', 'Lỗi: Mã đề "' . htmlspecialchars($ma_de) . '" đã tồn tại.');
@@ -57,14 +56,17 @@ if ($is_editing) {
     $assigned_questions_raw = $db->fetchAll("SELECT question_id FROM test_questions WHERE test_id = ?", [$test_id]);
     $assigned_question_ids = array_column($assigned_questions_raw, 'question_id');
 }
+
+// Include header sau khi tất cả logic đã được xử lý
+include APP_ROOT . '/templates/partials/header.php';
 ?>
 
 <div class="gdv-header">
     <h1><?php echo $page_title; ?></h1>
-    <a href="/admin/tests" class="gdv-button secondary">Quay lại danh sách</a>
+    <a href="/grader/tests" class="gdv-button secondary">Quay lại danh sách</a>
 </div>
 
-<form method="POST" action="/admin/tests/edit<?php echo $is_editing ? '?id=' . $test_id : ''; ?>" class="gdv-container" style="max-width: 800px; margin: 20px auto; padding: 40px; background: var(--gdv-white); border: 1px solid var(--gdv-border); border-radius: 12px;">
+<form method="POST" action="/grader/tests/edit<?php echo $is_editing ? '?id=' . $test_id : ''; ?>" class="gdv-card" style="max-width: 800px;">
     <p>
         <label for="title">Tiêu đề bài kiểm tra</label>
         <input type="text" name="title" id="title" class="input" value="<?php echo htmlspecialchars($test_data['title']); ?>" required>

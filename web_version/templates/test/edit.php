@@ -5,7 +5,6 @@ $user_id = $_GET['id'] ?? null;
 $is_editing = ($user_id !== null);
 
 $page_title = $is_editing ? 'Sửa Người dùng' : 'Thêm Người dùng mới';
-include APP_ROOT . '/templates/partials/header.php';
 
 $user_data = ['username' => '', 'display_name' => '', 'role' => 'grader'];
 
@@ -35,14 +34,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         redirect('/admin/users');
     } catch (Exception $e) {
-        if (strpos($e->getMessage(), '1062') !== false) { // Check for duplicate entry error
-            set_message('error', 'Lỗi: Tên đăng nhập "' . htmlspecialchars($username) . '" đã tồn tại.');
+        // Check for duplicate entry error using PDO error code
+        if ($e instanceof PDOException && $e->errorInfo[1] == 1062) {
+            set_message('error', 'Lỗi: Tên đăng nhập "' . htmlspecialchars($username) . '" đã được sử dụng.');
         } else {
             set_message('error', 'Lỗi: ' . $e->getMessage());
         }
         $user_data = $_POST;
     }
 }
+
+// Include header sau khi tất cả logic đã được xử lý
+include APP_ROOT . '/templates/partials/header.php';
 ?>
 
 <div class="gdv-header">

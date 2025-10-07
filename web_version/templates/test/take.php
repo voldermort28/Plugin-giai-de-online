@@ -1,102 +1,105 @@
 <?php
 // web_version/templates/test/take.php
 
-$page_title = 'Làm bài kiểm tra';
-include APP_ROOT . '/templates/partials/header.php';
-
+// 1. Lấy và xác thực thông tin đầu vào
 $ma_de = $_GET['ma_de'] ?? '';
 $phone_number = $_GET['phone_number'] ?? '';
 $submitter_name = $_GET['submitter_name'] ?? '';
 
-if (empty($ma_de)) {
-    set_message('error', 'Mã đề không được để trống.');
-    redirect('/');
+if (empty($ma_de) || empty($phone_number) || empty($submitter_name)) {
+    redirect('/'); // Chuyển hướng nếu thiếu thông tin
 }
 
+// 2. Tìm bài thi dựa trên mã đề
 $test = $db->fetch("SELECT * FROM tests WHERE ma_de = ?", [$ma_de]);
-
 if (!$test) {
-    redirect('/?error=invalid_code&ma_de=' . urlencode($ma_de) . '&phone_number=' . urlencode($phone_number) . '&submitter_name=' . urlencode($submitter_name));
+    redirect('/?error=invalid_code&ma_de=' . urlencode($ma_de)); // Chuyển hướng nếu mã đề không hợp lệ
 }
 
+// 3. Tạo một lượt làm bài mới
+$submission_id = $db->insert('submissions', [
+    'test_id' => $test['test_id'],
+    'contestant_name' => $submitter_name,
+    'contestant_phone' => $phone_number,
+    'status' => 'in_progress',
+    'submission_time' => date('Y-m-d H:i:s')
+]);
+
+// 4. Lấy danh sách câu hỏi cho bài thi
 $questions = $db->fetchAll("
     SELECT q.* FROM questions q
     JOIN test_questions tq ON q.question_id = tq.question_id
     WHERE tq.test_id = ?
-    ORDER BY q.question_id ASC
 ", [$test['test_id']]);
 
-if (empty($questions)) {
-    set_message('warning', 'Đề thi này chưa có câu hỏi nào. Vui lòng liên hệ quản trị viên.');
-    redirect('/');
-}
+$page_title = 'Làm bài thi: ' . htmlspecialchars($test['title']);
+include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<div class="lb-take-test-container gdv-container">
-    <h1><?php echo htmlspecialchars($test['title']); ?></h1>
-    <p>Mã đề: <strong><?php echo htmlspecialchars($test['ma_de']); ?></strong></p>
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <p>Thời gian làm bài: <strong><?php echo htmlspecialchars($test['time_limit']); ?> phút</strong></p>
-        <div id="test-timer" style="font-weight: bold; font-size: 1.2em; color: var(--gdv-primary);"></div>
+<style>
+    /* Custom styles for the test-taking page */
+    .test-question-card {
+        background: var(--gdv-white);
+        border: 1px solid var(--gdv-border);
+        border-radius: 0.75rem;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    .test-question-card h4 {
+        font-size: 1.125rem;
+        margin-bottom: 1.5rem;
+    }
+    .test-options label {
+        display: block;
+        background: #F9FAFB;
+        border: 1px solid var(--gdv-border);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: border-color 0.2s, background-color 0.2s;
+    }
+    .test-options label:hover {
+        background-color: #F3F4F6;
+    }
+    .test-options input[type="radio"] {
+        margin-right: 0.75rem;
+    }
+</style>
+
+<div id="lb-test-timer" data-time="<?php echo intval($test['time_limit']); ?>"></div>
+
+<div class="lb-take-test-container">
+    <div class="gdv-header">
+        <h1><?php echo htmlspecialchars($test['title']); ?></h1>
+        <p class="gdv-description">Thí sinh: <?php echo htmlspecialchars($submitter_name); ?></p>
     </div>
-    <p>Thí sinh: <strong><?php echo htmlspecialchars($submitter_name); ?></strong> (SĐT: <?php echo htmlspecialchars($phone_number); ?>)</p>
 
-    <hr>
-
-    <form id="test-submission-form" method="POST" action="/api/ajax">
+    <form id="test-submission-form">
         <input type="hidden" name="action" value="submit_test">
-        <input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
-        <input type="hidden" name="ma_de" value="<?php echo htmlspecialchars($ma_de); ?>">
-        <input type="hidden" name="phone_number" value="<?php echo htmlspecialchars($phone_number); ?>">
-        <input type="hidden" name="submitter_name" value="<?php echo htmlspecialchars($submitter_name); ?>">
+        <input type="hidden" name="submission_id" value="<?php echo $submission_id; ?>">
 
         <?php foreach ($questions as $index => $question): ?>
-            <div class="question-item" style="margin-bottom: 20px; padding: 15px; border: 1px solid var(--gdv-border); border-radius: 8px;">
-                <h3>Câu <?php echo $index + 1; ?>:</h3>
-                <p><?php echo nl2br(htmlspecialchars($question['content'])); ?></p>
-
-                <?php if ($question['type'] === 'trac_nghiem'): ?>
-                    <?php $options = json_decode($question['options'], true); ?>
-                    <?php if (!empty($options)): ?>
-                        <div class="options">
-                            <?php foreach ($options as $key => $option): ?>
-                                <label style="display: block; margin-bottom: 5px;"><input type="radio" name="answers[<?php echo $question['question_id']; ?>]" value="<?php echo htmlspecialchars($key); ?>"> <?php echo htmlspecialchars($option); ?></label>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                <?php elseif ($question['type'] === 'tu_luan'): ?>
-                    <textarea name="answers[<?php echo $question['question_id']; ?>]" rows="5" style="width: 100%; padding: 10px; border: 1px solid var(--gdv-border); border-radius: 5px;"></textarea>
+            <div class="test-question-card">
+                <h4>Câu <?php echo $index + 1; ?>: <?php echo nl2br(htmlspecialchars($question['content'])); ?></h4>
+                <?php if ($question['type'] === 'trac_nghiem'): 
+                    $options = json_decode($question['options'], true);
+                ?>
+                    <div class="test-options">
+                        <?php foreach ($options as $key => $value): ?>
+                            <label><input type="radio" name="answers[<?php echo $question['question_id']; ?>]" value="<?php echo $key; ?>"> <?php echo htmlspecialchars($value); ?></label>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: // tu_luan ?>
+                    <textarea name="answers[<?php echo $question['question_id']; ?>]" class="input" rows="5" placeholder="Nhập câu trả lời của bạn..."></textarea>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>
 
-        <button type="submit" class="gdv-button" style="margin-top: 20px;">Nộp bài</button>
+        <div style="text-align: center; margin-top: 2rem;">
+            <button type="submit" class="gdv-button" style="padding: 1rem 2.5rem; font-size: 1rem;">Nộp bài</button>
+        </div>
     </form>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const timerDiv = document.getElementById('test-timer');
-    const testForm = document.getElementById('test-submission-form');
-    const timeLimitMinutes = <?php echo intval($test['time_limit']); ?>;
-
-    if (timerDiv && timeLimitMinutes > 0) {
-        let timeLeft = timeLimitMinutes * 60;
-        const timerInterval = setInterval(function() {
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                alert('Hết giờ làm bài! Hệ thống sẽ tự động nộp bài của bạn.');
-                const submitButton = testForm.querySelector('button[type="submit"]');
-                if(submitButton) { submitButton.click(); } else { testForm.submit(); }
-            } else {
-                timeLeft--;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                timerDiv.textContent = 'Thời gian còn lại: ' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-            }
-        }, 1000);
-    }
-});
-</script>
 
 <?php include APP_ROOT . '/templates/partials/footer.php'; ?>

@@ -68,4 +68,40 @@ jQuery(document).ready(function($) {
         });
     });
 
+    // Xử lý đồng hồ đếm ngược
+    const timerElement = $('#lb-test-timer');
+    if (timerElement.length) {
+        const timeInMinutes = parseInt(timerElement.data('time'), 10);
+        let timeInSeconds = timeInMinutes * 60;
+
+        const countdownInterval = setInterval(function() {
+            if (timeInSeconds <= 0) {
+                clearInterval(countdownInterval);
+                timerElement.text("Hết giờ!");
+                // Tự động nộp bài khi hết giờ
+                $('#test-submission-form').trigger('submit');
+                return;
+            }
+
+            timeInSeconds--;
+
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = timeInSeconds % 60;
+
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+
+            timerElement.html(`
+                <span>${formattedMinutes}</span>:<span>${formattedSeconds}</span>
+            `);
+
+            // Thêm hiệu ứng cảnh báo khi gần hết giờ
+            if (timeInSeconds <= 60) {
+                timerElement.css({
+                    'animation': 'neon-glow-warning 1s infinite alternate',
+                    'color': '#ff4d4d'
+                });
+            }
+        }, 1000);
+    }
 });

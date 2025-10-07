@@ -29,14 +29,27 @@ $routes = [
     '/grader/grade' => ['file' => APP_ROOT . '/templates/grader/grade.php', 'auth' => true, 'role' => 'grader'],
     '/api/ajax' => ['file' => APP_ROOT . '/core/ajax.php', 'auth' => false],
     // Admin Routes
-    '/admin/tests' => ['file' => APP_ROOT . '/templates/admin/tests/index.php', 'auth' => true, 'role' => 'admin'],
-    '/admin/tests/edit' => ['file' => APP_ROOT . '/templates/admin/tests/edit.php', 'auth' => true, 'role' => 'admin'],
+    '/grader/tests' => ['file' => APP_ROOT . '/templates/admin/tests/index.php', 'auth' => true, 'role' => 'grader'], // Đổi từ /admin/tests
+    '/admin/tests/bulk-generate' => ['file' => APP_ROOT . '/templates/admin/tests/bulk-generate.php', 'auth' => true, 'role' => 'admin'],
+    '/grader/tests/edit' => ['file' => APP_ROOT . '/templates/admin/tests/edit.php', 'auth' => true, 'role' => 'grader'], // Đổi từ /admin/tests/edit
     '/admin/questions' => ['file' => APP_ROOT . '/templates/admin/questions/index.php', 'auth' => true, 'role' => 'admin'],
     '/admin/questions/edit' => ['file' => APP_ROOT . '/templates/admin/questions/edit.php', 'auth' => true, 'role' => 'admin'],
     '/admin/users' => ['file' => APP_ROOT . '/templates/admin/users/index.php', 'auth' => true, 'role' => 'admin'],
     '/admin/users/edit' => ['file' => APP_ROOT . '/templates/admin/users/edit.php', 'auth' => true, 'role' => 'admin'],
     '/admin/import' => ['file' => APP_ROOT . '/templates/admin/import/index.php', 'auth' => true, 'role' => 'admin'],
 ];
+
+/**
+ * Hàm render template và truyền các biến cần thiết vào.
+ * Điều này giải quyết vấn đề scope của biến một cách triệt để.
+ * @param string $file Đường dẫn đến file template.
+ * @param array $data Các biến cần truyền vào, ví dụ ['db' => $db, 'auth' => $auth].
+ */
+function render_template($file, $data = []) {
+    // Giải nén mảng thành các biến riêng lẻ (e.g., $data['db'] trở thành $db)
+    extract($data);
+    require_once $file;
+}
 
 // Xử lý route
 if (isset($routes[$request_uri])) {
@@ -53,7 +66,9 @@ if (isset($routes[$request_uri])) {
             redirect('/');
         }
     }
-    require_once $route['file'];
+    // Sử dụng hàm render_template thay vì require_once trực tiếp
+    // Truyền các đối tượng cốt lõi vào mọi template
+    render_template($route['file'], ['db' => $db, 'auth' => $auth]);
 } else {
     http_response_code(404);
     echo '<h1>404 Not Found</h1><p>Trang bạn tìm kiếm không tồn tại.</p>';

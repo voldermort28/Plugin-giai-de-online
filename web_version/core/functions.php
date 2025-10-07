@@ -6,31 +6,22 @@ function redirect($url, $status = 302) {
     exit();
 }
 
-function is_logged_in() {
-    return isset($_SESSION['user_id']);
-}
-
-function current_user() {
-    if (is_logged_in()) {
-        return $_SESSION['user'];
-    }
-    return null;
-}
-
-function has_role($role) {
-    $user = current_user();
-    return $user && $user['role'] === $role;
-}
-
 function set_message($type, $message) {
-    $_SESSION['messages'][$type] = $message;
+    // Store a single message as an array containing its type and text.
+    $_SESSION['message'] = ['type' => $type, 'text' => $message];
 }
 
-function get_message($type) {
-    if (isset($_SESSION['messages'][$type])) {
-        $message = $_SESSION['messages'][$type];
-        unset($_SESSION['messages'][$type]);
+function get_message() {
+    // Retrieve the single message and then clear it.
+    if (isset($_SESSION['message'])) {
+        $message = $_SESSION['message'];
+        unset($_SESSION['message']);
         return $message;
     }
     return null;
+}
+
+function has_message() {
+    // Check if the single message exists.
+    return !empty($_SESSION['message']);
 }

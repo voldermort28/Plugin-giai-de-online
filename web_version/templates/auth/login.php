@@ -2,40 +2,41 @@
 // web_version/templates/auth/login.php
 
 $page_title = 'Đăng nhập';
-include APP_ROOT . '/templates/partials/header.php';
+
+// Nếu đã đăng nhập, chuyển hướng đi ngay lập tức
+if ($auth->check()) {
+    redirect($auth->hasRole('admin') ? '/admin/tests' : '/grader/dashboard');
+}
 
 // Xử lý form đăng nhập khi có POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    if (!$auth->login($username, $password)) {
-        set_message('error', 'Tên đăng nhập hoặc mật khẩu không đúng.');
-    } else {
+    if ($auth->login($username, $password)) {
         set_message('success', 'Đăng nhập thành công!');
-        // Cải tiến: Chuyển hướng dựa trên vai trò
-        redirect(has_role('admin') ? '/admin/tests' : '/grader/dashboard');
+        redirect($auth->hasRole('admin') ? '/admin/tests' : '/grader/dashboard');
+    } else {
+        set_message('error', 'Tên đăng nhập hoặc mật khẩu không đúng.');
+        // Luôn redirect sau POST, kể cả khi lỗi
+        redirect('/login');
     }
 }
-
-// Nếu đã đăng nhập, chuyển hướng đi
-if ($auth->check()) {
-    redirect(has_role('admin') ? '/admin/tests' : '/grader/dashboard');
-}
+include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<div class="lb-login-form gdv-container">
-    <form id="loginform" method="POST" action="/login">
-        <h2>Đăng nhập Giám khảo</h2>
-        <p>
+<div class="lb-login-form">
+    <form id="loginform" method="POST" action="/login" class="gdv-card" style="max-width: 400px;">
+        <h2 style="text-align: center;">Đăng nhập</h2>
+        <div class="form-group">
             <label for="username">Tên đăng nhập</label>
             <input type="text" name="username" id="username" class="input" value="" size="20" required>
-        </p>
-        <p>
+        </div>
+        <div class="form-group">
             <label for="password">Mật khẩu</label>
             <input type="password" name="password" id="password" class="input" value="" size="20" required>
-        </p>
-        <p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="gdv-button" value="Đăng nhập"></p>
+        </div>
+        <div class="form-group"><button type="submit" class="gdv-button" style="width: 100%;">Đăng nhập</button></div>
     </form>
 </div>
 

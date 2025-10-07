@@ -2,7 +2,6 @@
 // web_version/templates/admin/users/index.php
 
 $page_title = 'Quản lý Người dùng';
-include APP_ROOT . '/templates/partials/header.php';
 
 $current_user_id = $auth->user()['user_id'];
 
@@ -18,6 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 $users = $db->fetchAll("SELECT user_id, username, display_name, role FROM users ORDER BY role, username");
+
+// Include header sau khi tất cả logic đã được xử lý
+include APP_ROOT . '/templates/partials/header.php';
 ?>
 
 <div class="gdv-header">

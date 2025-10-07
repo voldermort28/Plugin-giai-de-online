@@ -5,7 +5,6 @@ $question_id = $_GET['id'] ?? null;
 $is_editing = ($question_id !== null);
 
 $page_title = $is_editing ? 'Sửa Câu hỏi' : 'Thêm Câu hỏi mới';
-include APP_ROOT . '/templates/partials/header.php';
 
 $question_data = ['content' => '', 'type' => 'tu_luan', 'options' => json_encode(['A' => '', 'B' => '', 'C' => '', 'D' => '']), 'correct_answer' => ''];
 
@@ -48,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $options_array = json_decode($question_data['options'], true) ?: ['A' => '', 'B' => '', 'C' => '', 'D' => ''];
+
+// Include header sau khi tất cả logic đã được xử lý
+include APP_ROOT . '/templates/partials/header.php';
 ?>
 
 <div class="gdv-header">
