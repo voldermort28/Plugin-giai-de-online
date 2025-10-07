@@ -112,6 +112,12 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             .gdv-hamburger.is-active .bar:nth-child(2) { opacity: 0; }
             .gdv-hamburger.is-active .bar:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
 
+            .gdv-header {
+                flex-wrap: wrap;
+                align-items: flex-start;
+                padding-bottom: 1rem;
+            }
+
             .gdv-nav {
                 position: absolute; top: 60px; right: 0;
                 width: 250px;
@@ -130,6 +136,15 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             }
             .gdv-nav.is-active { transform: translateY(0); }
             .gdv-nav a { width: 100%; box-sizing: border-box; }
+
+            .gdv-card {
+                padding: 20px;
+                margin: 20px auto;
+            }
+
+            .gdv-table-wrapper {
+                overflow-x: auto; /* Cho phép cuộn ngang bảng */
+            }
         }
 
         /* Message/Notification Bar */
@@ -139,7 +154,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-message.warning { background-color: var(--gdv-warning-bg); border-color: #FDE68A; color: #B45309; }
 
         /* Table Styles */
-        .gdv-table-wrapper { background: var(--gdv-white); border: 1px solid var(--gdv-border); border-radius: 0.75rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07); overflow: hidden; }
+        .gdv-table-wrapper { background: var(--gdv-white); border: 1px solid var(--gdv-border); border-radius: 0.75rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07); overflow-x: auto; }
         .gdv-table { width: 100%; border-collapse: collapse; }
         .gdv-table th, .gdv-table td { padding: 0.75rem 1.5rem; text-align: left; border-bottom: 1px solid var(--gdv-border); }
         .gdv-table thead th { background-color: #F9FAFB; color: var(--gdv-text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -157,6 +172,9 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-status.submitted { background-color: #FEF3C7; color: #92400E; }
         .gdv-status.graded { background-color: #D1FAE5; color: #065F46; }
         .gdv-status.ready { background-color: #DBEAFE; color: #1E40AF; }
+        .gdv-status.error { /* Thêm style cho trạng thái lỗi/đã dùng */
+            background-color: var(--gdv-error-bg); color: #B91C1C;
+        }
 
     </style>
 </head>

@@ -44,10 +44,29 @@ function handle_submit_test(Database $db) {
     ]);
 
     foreach ($answers as $question_id => $answer_content) {
+        $question_id = intval($question_id);
+        $user_answer = is_array($answer_content) ? json_encode($answer_content) : trim($answer_content);
+
+        // Tự động chấm câu trắc nghiệm
+        $question_data = $db->fetch("SELECT type, correct_answer FROM questions WHERE question_id = ?", [$question_id]);
+        $is_correct = 2; // Mặc định là 'chờ chấm'
+
+        if ($question_data && $question_data['type'] === 'trac_nghiem') {
+            if (!empty($user_answer)) {
+                // Logic so sánh mạnh hơn để tránh lỗi ký tự ẩn và khoảng trắng
+                $clean_user_answer = preg_replace('/[^A-Z]/', '', strtoupper($user_answer));
+                $clean_correct_answer = preg_replace('/[^A-Z]/', '', strtoupper($question_data['correct_answer']));
+                $is_correct = ($clean_user_answer === $clean_correct_answer) ? 1 : 0;
+            } else {
+                $is_correct = 0; // Không trả lời thì tính là sai
+            }
+        }
+
         $db->insert('answers', [
             'submission_id' => $submission_id,
             'question_id' => $question_id,
-            'answer_content' => is_array($answer_content) ? json_encode($answer_content) : $answer_content
+            'user_answer' => $user_answer,
+            'is_correct' => $is_correct
         ]);
     }
 

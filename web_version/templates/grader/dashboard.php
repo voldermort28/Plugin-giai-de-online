@@ -93,7 +93,10 @@ if (!empty($graded_submission_ids)) {
                     <td><strong><?php echo htmlspecialchars($sub['contestant_name']); ?></strong></td>
                     <td><?php echo date('d/m/Y, H:i', strtotime($sub['submission_time'])); ?></td>
                     <td><strong><?php echo intval($sub['score']); ?>/<?php echo $total_questions; ?></strong></td>
-                    <td><a href="/grader/grade?submission_id=<?php echo $sub['submission_id']; ?>" class="gdv-action-link">Xem lại</a></td>
+                    <td>
+                        <a href="/grader/grade?submission_id=<?php echo $sub['submission_id']; ?>&view_mode=review" class="gdv-action-link">Xem lại</a> | 
+                        <a href="/grader/grade?submission_id=<?php echo $sub['submission_id']; ?>&view_mode=regrade" class="gdv-action-link">Chấm lại</a>
+                    </td>
                 </tr>
             <?php endforeach; endif; ?>
         </tbody>

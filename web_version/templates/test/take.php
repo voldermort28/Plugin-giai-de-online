@@ -16,6 +16,13 @@ if (!$test) {
     redirect('/?error=invalid_code&ma_de=' . urlencode($ma_de)); // Chuyển hướng nếu mã đề không hợp lệ
 }
 
+// Kiểm tra xem đề thi đã được sử dụng chưa
+$existing_submission = $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ?", [$test['test_id']]);
+if ($existing_submission) {
+    set_message('error', 'Mã đề thi này đã được sử dụng và không thể làm lại.');
+    redirect('/');
+}
+
 // 3. Tạo một lượt làm bài mới
 $submission_id = $db->insert('submissions', [
     'test_id' => $test['test_id'],
@@ -78,6 +85,11 @@ include APP_ROOT . '/templates/partials/header.php';
     <form id="test-submission-form">
         <input type="hidden" name="action" value="submit_test">
         <input type="hidden" name="submission_id" value="<?php echo $submission_id; ?>">
+        <!-- Bổ sung các trường ẩn còn thiếu -->
+        <input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
+        <input type="hidden" name="ma_de" value="<?php echo htmlspecialchars($ma_de); ?>">
+        <input type="hidden" name="submitter_name" value="<?php echo htmlspecialchars($submitter_name); ?>">
+        <input type="hidden" name="phone_number" value="<?php echo htmlspecialchars($phone_number); ?>">
 
         <?php foreach ($questions as $index => $question): ?>
             <div class="test-question-card">
