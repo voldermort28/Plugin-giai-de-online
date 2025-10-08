@@ -5,6 +5,7 @@ $page_title = 'Đề Thi';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
+    validate_csrf_token(); // Validate CSRF token for all POST actions
 
     if ($action === 'delete_test') {
         $test_id_to_delete = $_POST['test_id'] ?? null;
@@ -192,12 +193,14 @@ include APP_ROOT . '/templates/partials/header.php';
                             <?php else: ?>
                                 <span class="gdv-action-link" style="color: var(--gdv-text-secondary); cursor: not-allowed;" title="Không thể sửa đề đã được sử dụng. Hãy mở lại đề nếu muốn sửa.">Sửa</span>
                                 <form method="POST" action="/grader/tests" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn MỞ LẠI bài kiểm tra này? Hành động này sẽ XÓA bài làm hiện tại của thí sinh.');">
+                                    <?php csrf_field(); ?>
                                     <input type="hidden" name="action" value="reopen_test">
                                     <input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
                                     <button type="submit" class="gdv-action-link" style="border:none; background:none; cursor:pointer; color: var(--gdv-success);">Mở lại</button>
                                 </form>
                             <?php endif; ?>
                             <form method="POST" action="/grader/tests" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài kiểm tra này?');">
+                                <?php csrf_field(); ?>
                                 <input type="hidden" name="action" value="delete_test"><input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
                                 <button type="submit" class="gdv-action-link" style="border:none; background:none; cursor:pointer; color: #dc3545;">Xóa</button>
                             </form>
@@ -214,11 +217,13 @@ include APP_ROOT . '/templates/partials/header.php';
     <span id="bulk-actions-count">Đã chọn 0 mục</span>
     <div style="display: flex; gap: 10px;">
         <form id="bulk-reopen-form" method="POST" action="/grader/tests" onsubmit="return confirm('Mở lại các đề đã chọn? Bài làm của thí sinh sẽ bị xóa.');">
+            <?php csrf_field(); ?>
             <input type="hidden" name="action" value="bulk_reopen">
         </form>
         <button type="submit" form="bulk-reopen-form" class="gdv-button" style="background-color: var(--gdv-success);">Mở lại đã chọn</button>
 
         <form id="bulk-delete-form" method="POST" action="/grader/tests" onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN các mục đã chọn?');">
+            <?php csrf_field(); ?>
             <input type="hidden" name="action" value="bulk_delete">
         </form>
         <button type="submit" form="bulk-delete-form" class="gdv-button danger">Xóa đã chọn</button>

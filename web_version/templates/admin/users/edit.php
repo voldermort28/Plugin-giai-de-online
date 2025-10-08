@@ -7,6 +7,7 @@ $is_editing = ($user_id !== null);
 $page_title = $is_editing ? 'Sửa Người dùng' : 'Thêm Người dùng mới';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    validate_csrf_token();
     $username = $_POST['username'] ?? '';
     $display_name = $_POST['display_name'] ?? '';
     $role = $_POST['role'] ?? 'grader';
@@ -56,6 +57,7 @@ include APP_ROOT . '/templates/partials/header.php';
 </div>
 
 <form method="POST" action="/admin/users/edit<?php echo $is_editing ? '?id=' . $user_id : ''; ?>" class="gdv-container" style="max-width: 700px; margin: 20px auto; padding: 40px; background: var(--gdv-white); border: 1px solid var(--gdv-border); border-radius: 12px;">
+    <?php csrf_field(); ?>
     <p>
         <label for="username">Tên đăng nhập</label>
         <input type="text" name="username" id="username" class="input" value="<?php echo htmlspecialchars($user_data['username']); ?>" <?php echo $is_editing ? 'readonly' : 'required'; ?>>

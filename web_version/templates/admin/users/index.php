@@ -7,6 +7,7 @@ $current_user_id = $auth->user()['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_user') {
     $user_id_to_delete = $_POST['user_id'] ?? null;
+    validate_csrf_token();
     if ($user_id_to_delete && $user_id_to_delete != $current_user_id) {
         $db->delete('users', 'user_id = ?', [$user_id_to_delete]);
         set_message('success', 'Đã xóa người dùng thành công.');
@@ -52,6 +53,7 @@ include APP_ROOT . '/templates/partials/header.php';
                             <a href="/admin/users/edit?id=<?php echo $user['user_id']; ?>" class="gdv-action-link">Sửa</a>
                             <?php if ($user['user_id'] != $current_user_id): ?>
                                 <form method="POST" action="/admin/users" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa người dùng này?');">
+                                    <?php csrf_field(); ?>
                                     <input type="hidden" name="action" value="delete_user"><input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                     <button type="submit" class="gdv-action-link" style="border:none; background:none; cursor:pointer; color: #dc3545;">Xóa</button>
                                 </form>
