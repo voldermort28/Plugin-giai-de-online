@@ -131,10 +131,11 @@ if (isset($_SESSION['contestant_phone'])):
                 </thead>
                 <tbody>
                     <?php $rank = 1; foreach ($leaderboard_data as $row): 
+                        $rank_class = ($rank <= 3) ? 'gdv-rank-' . $rank : '';
                         $highlight_class = ($row['contestant_phone'] === $current_phone) ? 'is-current-user' : '';
                     ?>
                         <tr class="<?php echo $highlight_class; ?>">
-                            <td style="text-align: center; font-weight: bold;"><?php echo $rank++; ?></td>
+                            <td class="gdv-rank-cell <?php echo $rank_class; ?>" style="text-align: center; font-weight: bold; font-size: 1.2em;"><?php echo $rank++; ?></td>
                             <td><strong><?php echo htmlspecialchars($row['contestant_name']); ?></strong></td>
                             <td style="text-align: center;"><?php echo intval($row['tests_taken']); ?></td>
                             <td style="text-align: right; font-weight: bold; font-size: 1.1em; color: var(--gdv-primary);"><?php echo htmlspecialchars($row['average_score']); ?></td>

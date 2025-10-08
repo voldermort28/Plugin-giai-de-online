@@ -107,9 +107,11 @@ include APP_ROOT . '/templates/partials/header.php';
                 </tr>
             </thead>
             <tbody>
-                <?php $rank = 1; foreach ($leaderboard_data as $row): ?>
+                <?php $rank = 1; foreach ($leaderboard_data as $row):
+                    $rank_class = ($rank <= 3) ? 'gdv-rank-' . $rank : '';
+                ?>
                     <tr>
-                        <td style="text-align: center; font-weight: bold;"><?php echo $rank++; ?></td>
+                        <td class="gdv-rank-cell <?php echo $rank_class; ?>" style="text-align: center; font-weight: bold; font-size: 1.2em;"><?php echo $rank++; ?></td>
                         <td>
                             <a href="/admin/contestants/view?phone=<?php echo urlencode($row['contestant_phone']); ?>" class="gdv-action-link">
                                 <strong><?php echo htmlspecialchars($row['contestant_name']); ?></strong>

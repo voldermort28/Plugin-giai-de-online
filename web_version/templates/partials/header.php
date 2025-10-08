@@ -12,7 +12,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
     <style>
         /* General Styles */
         :root { /* Inspired by the reference image */
-            --gdv-primary: #6D28D9; --gdv-primary-dark: #5B21B6; --gdv-white: #fff;
+            --gdv-primary: #4F46E5; --gdv-primary-dark: #4338CA; --gdv-white: #fff;
             --gdv-background: #F3F4F6; --gdv-border: #E5E7EB; --gdv-text: #1F2937;
             --gdv-text-secondary: #6B7280; --gdv-danger: #DC2626; --gdv-success: #16A34A;
             --gdv-success-bg: #F0FDF4; --gdv-error-bg: #FEF2F2; --gdv-warning-bg: #FFFBEB;
@@ -71,7 +71,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
 
         /* Header & Navigation */
         .gdv-main-header {
-            background-color: var(--gdv-white);
+            background-color: #1d1d1d;
             padding: 0 20px;
             border-bottom: 1px solid var(--gdv-border);
             display: flex;
@@ -92,12 +92,13 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-brand { display: flex; align-items: center; text-decoration: none; }
         .gdv-brand img { height: 36px; display: block; }
         .gdv-nav { display: flex; align-items: center; gap: 6px; }
-        .gdv-nav-item > a { 
-            text-decoration: none; color: var(--gdv-text-secondary); font-weight: 500;
+        .gdv-nav-item > a {
+            text-decoration: none;
+            color: #ffffff; font-weight: 500;
             padding: 8px 12px; border-radius: 8px; white-space: nowrap;
             display: flex; align-items: center; gap: 4px; transition: background-color 0.2s, color 0.2s;
         }
-        .gdv-nav-item > a:hover { background-color: #F3F4F6; color: var(--gdv-text); }
+        .gdv-nav-item > a:hover { background-color: #333; color: var(--gdv-white); }
         .gdv-nav-item > a.active, .gdv-nav-item.dropdown.is-open > a.dropdown-toggle {
             background-color: #EDE9FE; /* Light purple background */
             color: var(--gdv-primary); /* Dark purple text */
@@ -203,6 +204,11 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-table tbody tr:nth-child(even) { background-color: #F9FAFB; } /* Zebra-striping */
         .gdv-table tbody tr:last-child td { border-bottom: none; }
         .gdv-table td strong { font-weight: 500; color: var(--gdv-text); }
+        /* Rank colors */
+        .gdv-rank-1 { color: #D4AF37; } /* Gold */
+        .gdv-rank-2 { color: #A8A29E; } /* Silver */
+        .gdv-rank-3 { color: #A16207; } /* Bronze */
+
 
         /* Status Tags */
         .gdv-status {
@@ -212,8 +218,8 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-status.tu_luan { background-color: #E0E7FF; color: #4338CA; }
         .gdv-status.trac_nghiem { background-color: #E0F2FE; color: #0369A1; }
         .gdv-status.submitted { background-color: #FEF3C7; color: #B45309; }
-        .gdv-status.graded { background-color: #D1FAE5; color: #059669; }
-        .gdv-status.ready { background-color: #DBEAFE; color: #1D4ED8; }
+        .gdv-status.graded { background-color: #E0E7FF; color: #4338CA; }
+        .gdv-status.ready { background-color: #D1FAE5; color: #059669; }
         .gdv-status.error { /* Thêm style cho trạng thái lỗi/đã dùng */
             background-color: var(--gdv-error-bg); color: #B91C1C;
         }
