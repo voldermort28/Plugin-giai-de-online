@@ -16,7 +16,10 @@ if (empty($ma_de) || empty($phone_number)) {
 
 // Kiểm tra mã đề
 $test = $db->fetch("SELECT test_id, title FROM tests WHERE ma_de = ?", [$ma_de]);
-$existing_submission = $test ? $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ?", [$test['test_id']]) : null;
+
+// Sửa lỗi: Kiểm tra sự tồn tại của BẤT KỲ bài làm nào (kể cả 'in_progress')
+// để ngăn chặn việc một mã đề được sử dụng lại khi bài làm trước đó chưa hoàn tất.
+$existing_submission = $test ? $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ? LIMIT 1", [$test['test_id']]) : null;
 
 if (!$test || $existing_submission) {
     redirect('/?error=invalid_code&ma_de=' . urlencode($ma_de) . '&phone_number=' . urlencode($phone_number));

@@ -79,9 +79,9 @@ if ($filter_contest === null && !empty($contests)) {
 $filter_status = $_GET['status'] ?? 'ready'; // Mặc định là 'Sẵn Sàng'
 
 $sql = "SELECT t.*, s.submission_id 
-        FROM tests t 
-        LEFT JOIN submissions s ON t.test_id = s.test_id";
+        FROM tests t LEFT JOIN submissions s ON t.test_id = s.test_id";
 $params = [];
+
 $where_clauses = [];
 
 if (!empty($filter_contest)) {
@@ -89,19 +89,19 @@ if (!empty($filter_contest)) {
     $params[] = $filter_contest;
 }
 
-if ($filter_status === 'ready') {
-    // Sẵn sàng: Chưa có submission nào
-    $where_clauses[] = "s.submission_id IS NULL";
-} elseif ($filter_status === 'used') {
-    // Đã dùng: Có ít nhất 1 submission
-    $where_clauses[] = "s.submission_id IS NOT NULL";
-}
-
 if (!empty($where_clauses)) {
     $sql .= " WHERE " . implode(' AND ', $where_clauses);
 }
 
+// Thêm GROUP BY để đảm bảo mỗi đề thi chỉ xuất hiện một lần
 $sql .= " GROUP BY t.test_id ORDER BY t.created_at DESC";
+
+// Lọc theo trạng thái sau khi đã group
+if ($filter_status === 'ready') {
+    $sql = str_replace("GROUP BY t.test_id", "GROUP BY t.test_id HAVING COUNT(s.submission_id) = 0", $sql);
+} elseif ($filter_status === 'used') {
+    $sql = str_replace("GROUP BY t.test_id", "GROUP BY t.test_id HAVING COUNT(s.submission_id) > 0", $sql);
+}
 
 $tests = $db->fetchAll($sql, $params);
 
