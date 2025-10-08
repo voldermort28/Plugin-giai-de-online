@@ -11,17 +11,17 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         /* General Styles */
-        :root {
-            --gdv-primary: #4F46E5; --gdv-primary-dark: #4338CA; --gdv-white: #fff;
-            --gdv-background: #F9FAFB; --gdv-border: #E5E7EB; --gdv-text: #111827;
-            --gdv-text-secondary: #6B7280; --gdv-danger: #EF4444; --gdv-success: #10B981;
-            --gdv-success-bg: #D1FAE5; --gdv-error-bg: #FEE2E2; --gdv-warning-bg: #FEF3C7;
+        :root { /* Inspired by the reference image */
+            --gdv-primary: #6D28D9; --gdv-primary-dark: #5B21B6; --gdv-white: #fff;
+            --gdv-background: #F3F4F6; --gdv-border: #E5E7EB; --gdv-text: #1F2937;
+            --gdv-text-secondary: #6B7280; --gdv-danger: #DC2626; --gdv-success: #16A34A;
+            --gdv-success-bg: #F0FDF4; --gdv-error-bg: #FEF2F2; --gdv-warning-bg: #FFFBEB;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; margin: 0; background-color: var(--gdv-background); color: var(--gdv-text); line-height: 1.6; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--gdv-background); color: var(--gdv-text); line-height: 1.6; }
         .gdv-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
         /* Typography */
-        h1, h2, h3, h4, h5, h6 { color: var(--gdv-text); margin-top: 0; margin-bottom: 0.5em; font-weight: 600; }
+        h1, h2, h3, h4, h5, h6 { color: var(--gdv-text); margin-top: 0; margin-bottom: 0.5em; font-weight: 700; }
         h1 { font-size: 1.875rem; } h2 { font-size: 1.5rem; } h3 { font-size: 1.25rem; }
         p { margin-bottom: 1em; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--gdv-text); }
@@ -31,14 +31,14 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-card {
             background: var(--gdv-white);
             border: 1px solid var(--gdv-border);
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             padding: 40px;
             margin: 40px auto; /* Center the card */
         }
         .input, select, textarea { 
             width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--gdv-border); 
-            border-radius: 0.375rem; box-sizing: border-box; background-color: var(--gdv-white);
+            border-radius: 8px; box-sizing: border-box; background-color: var(--gdv-white);
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .input:focus, select:focus, textarea:focus {
@@ -50,13 +50,13 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         /* Buttons */
         .gdv-button { 
             background-color: var(--gdv-primary); color: var(--gdv-white); border: 1px solid transparent; 
-            padding: 0.625rem 1.25rem; border-radius: 0.375rem; cursor: pointer; text-decoration: none; 
+            padding: 0.625rem 1.25rem; border-radius: 8px; cursor: pointer; text-decoration: none; 
             display: inline-block; font-size: 0.875rem; font-weight: 500;
             transition: background-color 0.2s, transform 0.1s;
         }
-        .gdv-button:hover { background-color: var(--gdv-primary-dark); transform: translateY(-1px); }
+        .gdv-button:hover { background-color: var(--gdv-primary-dark); }
         .gdv-button.secondary {
-            background-color: var(--gdv-white); color: var(--gdv-text); border-color: var(--gdv-border);
+            background-color: #F3F4F6; color: var(--gdv-text); border-color: transparent;
         }
         .gdv-button.secondary:hover { background-color: #F9FAFB; }
         .gdv-button.danger {
@@ -89,10 +89,20 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             justify-content: space-between;
             align-items: center;
         }
-        .gdv-brand { font-size: 18px; font-weight: 600; text-decoration: none; color: var(--gdv-text); }
-        .gdv-nav { display: flex; align-items: center; gap: 5px; }
-        .gdv-nav-item > a { text-decoration: none; color: var(--gdv-text-secondary); font-weight: 500; padding: 8px 12px; border-radius: 4px; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
-        .gdv-nav-item > a.active, .gdv-nav-item > a:hover { background-color: #f0f0f1; color: var(--gdv-text); }
+        .gdv-brand { display: flex; align-items: center; text-decoration: none; }
+        .gdv-brand img { height: 36px; display: block; }
+        .gdv-nav { display: flex; align-items: center; gap: 6px; }
+        .gdv-nav-item > a { 
+            text-decoration: none; color: var(--gdv-text-secondary); font-weight: 500;
+            padding: 8px 12px; border-radius: 8px; white-space: nowrap;
+            display: flex; align-items: center; gap: 4px; transition: background-color 0.2s, color 0.2s;
+        }
+        .gdv-nav-item > a:hover { background-color: #F3F4F6; color: var(--gdv-text); }
+        .gdv-nav-item > a.active, .gdv-nav-item.dropdown.is-open > a.dropdown-toggle {
+            background-color: #EDE9FE; /* Light purple background */
+            color: var(--gdv-primary); /* Dark purple text */
+            font-weight: 600;
+        }
         
         /* Dropdown Menu */
         .gdv-nav-item.dropdown { position: relative; }
@@ -117,9 +127,13 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             visibility: visible;
             transform: translateY(0);
         }
-        .gdv-dropdown-menu a { display: block; padding: 8px 12px; border-radius: 4px; color: var(--gdv-text); text-decoration: none; }
-        .gdv-dropdown-menu a:hover { background-color: #f0f0f1; }
-        .gdv-dropdown-menu a.active { background-color: #e9e9ed; font-weight: 600; }
+        .gdv-dropdown-menu a { display: block; padding: 8px 12px; border-radius: 6px; color: var(--gdv-text); text-decoration: none; transition: background-color 0.2s, color 0.2s; }
+        .gdv-dropdown-menu a:hover { background-color: #F3F4F6; }
+        .gdv-dropdown-menu a.active, .gdv-dropdown-menu a.active:hover {
+            background-color: #EDE9FE;
+            color: var(--gdv-primary);
+            font-weight: 600;
+        }
 
         .gdv-hamburger { display: none; } /* Hidden on desktop */
 
@@ -182,10 +196,11 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-message.warning { background-color: var(--gdv-warning-bg); border-color: #FDE68A; color: #B45309; }
 
         /* Table Styles */
-        .gdv-table-wrapper { background: var(--gdv-white); border: 1px solid var(--gdv-border); border-radius: 0.75rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07); overflow-x: auto; }
+        .gdv-table-wrapper { background: var(--gdv-white); border: 1px solid var(--gdv-border); border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); overflow-x: auto; }
         .gdv-table { width: 100%; border-collapse: collapse; }
         .gdv-table th, .gdv-table td { padding: 0.75rem 1.5rem; text-align: left; border-bottom: 1px solid var(--gdv-border); }
-        .gdv-table thead th { background-color: #F9FAFB; color: var(--gdv-text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .gdv-table thead th { background-color: #F9FAFB; color: var(--gdv-text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        .gdv-table tbody tr:nth-child(even) { background-color: #F9FAFB; } /* Zebra-striping */
         .gdv-table tbody tr:last-child td { border-bottom: none; }
         .gdv-table td strong { font-weight: 500; color: var(--gdv-text); }
 
@@ -194,12 +209,11 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px;
             font-size: 0.75rem; font-weight: 500;
         }
-        .gdv-status.tu_luan, .gdv-status.trac_nghiem {
-            background-color: #E0E7FF; color: #3730A3;
-        }
-        .gdv-status.submitted { background-color: #FEF3C7; color: #92400E; }
-        .gdv-status.graded { background-color: #D1FAE5; color: #065F46; }
-        .gdv-status.ready { background-color: #DBEAFE; color: #1E40AF; }
+        .gdv-status.tu_luan { background-color: #E0E7FF; color: #4338CA; }
+        .gdv-status.trac_nghiem { background-color: #E0F2FE; color: #0369A1; }
+        .gdv-status.submitted { background-color: #FEF3C7; color: #B45309; }
+        .gdv-status.graded { background-color: #D1FAE5; color: #059669; }
+        .gdv-status.ready { background-color: #DBEAFE; color: #1D4ED8; }
         .gdv-status.error { /* Thêm style cho trạng thái lỗi/đã dùng */
             background-color: var(--gdv-error-bg); color: #B91C1C;
         }
@@ -226,26 +240,43 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             z-index: 1000;
         }
         .gdv-bulk-actions.visible { bottom: 20px; }
+
+        /* Filter/Tabs Bar */
+        .gdv-filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: var(--gdv-white);
+            border-radius: 12px;
+            border: 1px solid var(--gdv-border);
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
     </style>
 </head>
 <body>
 
 <header class="gdv-main-header">
-    <a href="/" class="gdv-brand">Hệ thống Chấm thi</a>
+    <a href="/" class="gdv-brand">
+        <img src="https://laboon.vn/wp-content/uploads/2023/10/web_logo1.png" alt="Hệ thống Chấm thi">
+    </a>
     <nav class="gdv-nav" id="main-nav" role="navigation">
         <?php if ($auth->check()): ?>
             <div class="gdv-nav-item">
-                <a href="/grader/dashboard" class="<?php echo ($current_uri == '/grader/dashboard') ? 'active' : ''; ?>">Chấm Bài</a>
+                <a href="/grader/dashboard" class="<?php echo ($current_uri == '/grader/dashboard') ? 'active' : ''; ?>">Chấm bài</a>
             </div>
             <div class="gdv-nav-item">
-                <a href="/grader/tests" class="<?php echo in_array($current_uri, ['/grader/tests', '/grader/tests/edit', '/admin/tests/bulk-generate']) ? 'active' : ''; ?>">Đề Thi</a>
+                <a href="/grader/tests" class="<?php echo in_array($current_uri, ['/grader/tests', '/grader/tests/edit', '/admin/tests/bulk-generate']) ? 'active' : ''; ?>">Đề thi</a>
+            </div>
+            <div class="gdv-nav-item">
+                <a href="/admin/contestants" class="<?php echo in_array($current_uri, ['/admin/contestants', '/admin/contestants/view']) ? 'active' : ''; ?>">Thí sinh</a>
             </div>
 
             <?php if ($auth->hasRole('admin')): 
                 $is_management_active = in_array($current_uri, [
                     '/admin/questions', '/admin/questions/edit',
                     '/admin/users', '/admin/users/edit',
-                    '/admin/contestants', '/admin/contestants/view',
                     '/admin/import'
                 ]);
             ?>
@@ -256,8 +287,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
                     </a>
                     <div class="gdv-dropdown-menu">
                         <a href="/admin/questions" class="<?php echo in_array($current_uri, ['/admin/questions', '/admin/questions/edit']) ? 'active' : ''; ?>">Câu Hỏi</a>
-                        <a href="/admin/users" class="<?php echo in_array($current_uri, ['/admin/users', '/admin/users/edit']) ? 'active' : ''; ?>">Quản lý User</a>
-                        <a href="/admin/contestants" class="<?php echo in_array($current_uri, ['/admin/contestants', '/admin/contestants/view']) ? 'active' : ''; ?>">Thí Sinh</a>
+                        <a href="/admin/users" class="<?php echo in_array($current_uri, ['/admin/users', '/admin/users/edit']) ? 'active' : ''; ?>">Users</a>
                         <a href="/admin/import" class="<?php echo ($current_uri == '/admin/import') ? 'active' : ''; ?>">Import Câu Hỏi</a>
                     </div>
                 </div>

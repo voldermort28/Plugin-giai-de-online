@@ -5,18 +5,6 @@ $user_id = $_GET['id'] ?? null;
 $is_editing = ($user_id !== null);
 
 $page_title = $is_editing ? 'Sửa Người dùng' : 'Thêm Người dùng mới';
-include APP_ROOT . '/templates/partials/header.php';
-
-$user_data = ['username' => '', 'display_name' => '', 'role' => 'grader'];
-
-if ($is_editing) {
-    $data = $db->fetch("SELECT user_id, username, display_name, role FROM users WHERE user_id = ?", [$user_id]);
-    if (!$data) {
-        set_message('error', 'Không tìm thấy người dùng.');
-        redirect('/admin/users');
-    }
-    $user_data = $data;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
@@ -40,9 +28,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             set_message('error', 'Lỗi: ' . $e->getMessage());
         }
-        $user_data = $_POST;
     }
 }
+
+$user_data = ['username' => '', 'display_name' => '', 'role' => 'grader'];
+
+if ($is_editing) {
+    $data = $db->fetch("SELECT user_id, username, display_name, role FROM users WHERE user_id = ?", [$user_id]);
+    if (!$data) {
+        set_message('error', 'Không tìm thấy người dùng.');
+        redirect('/admin/users');
+    }
+    $user_data = $data;
+}
+
+// If there was a POST error, repopulate the form data
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST)) {
+    $user_data = array_merge($user_data, $_POST);
+}
+
+include APP_ROOT . '/templates/partials/header.php';
 ?>
 
 <div class="gdv-header">
