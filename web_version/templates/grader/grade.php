@@ -7,7 +7,7 @@ if (!$submission_id) {
     redirect('/grader/dashboard');
 }
 
-$view_mode = $_GET['view_mode'] ?? 'regrade'; // Mặc định là 'regrade' (chấm lại)
+$view_mode = $_GET['view_mode'] ?? 'regrade';
 
 // Xử lý khi giám khảo nộp form chấm bài
 if ($view_mode !== 'review' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'grade_submission') {

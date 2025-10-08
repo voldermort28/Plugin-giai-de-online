@@ -90,9 +90,37 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             align-items: center;
         }
         .gdv-brand { font-size: 18px; font-weight: 600; text-decoration: none; color: var(--gdv-text); }
-        .gdv-nav { display: flex; align-items: center; gap: 15px; }
-        .gdv-nav a { text-decoration: none; color: var(--gdv-text-secondary); font-weight: 500; padding: 8px 12px; border-radius: 4px; white-space: nowrap; }
-        .gdv-nav a.active, .gdv-nav a:hover { background-color: #f0f0f1; color: var(--gdv-text); }
+        .gdv-nav { display: flex; align-items: center; gap: 5px; }
+        .gdv-nav-item > a { text-decoration: none; color: var(--gdv-text-secondary); font-weight: 500; padding: 8px 12px; border-radius: 4px; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+        .gdv-nav-item > a.active, .gdv-nav-item > a:hover { background-color: #f0f0f1; color: var(--gdv-text); }
+        
+        /* Dropdown Menu */
+        .gdv-nav-item.dropdown { position: relative; }
+        .gdv-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--gdv-white);
+            border: 1px solid var(--gdv-border);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 8px;
+            min-width: 220px;
+            z-index: 1010;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+        }
+        .gdv-nav-item.dropdown.is-open > .gdv-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .gdv-dropdown-menu a { display: block; padding: 8px 12px; border-radius: 4px; color: var(--gdv-text); text-decoration: none; }
+        .gdv-dropdown-menu a:hover { background-color: #f0f0f1; }
+        .gdv-dropdown-menu a.active { background-color: #e9e9ed; font-weight: 600; }
+
         .gdv-hamburger { display: none; } /* Hidden on desktop */
 
         /* Responsive (Mobile) */
@@ -131,7 +159,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
                 border-radius: 0 0 0 8px;
                 transform: translateY(-150%);
                 transition: transform 0.3s ease-in-out;
-                z-index: 1000;
+                z-index: 1005;
                 gap: 5px;
             }
             .gdv-nav.is-active { transform: translateY(0); }
@@ -175,28 +203,79 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-status.error { /* Thêm style cho trạng thái lỗi/đã dùng */
             background-color: var(--gdv-error-bg); color: #B91C1C;
         }
+        .gdv-table tbody tr.is-current-user {
+            background-color: var(--gdv-warning-bg) !important;
+            border-left: 3px solid #FBBF24;
+        }
 
+        /* Bulk Actions Bar */
+        .gdv-bulk-actions {
+            position: fixed;
+            bottom: -100px; /* Bắt đầu ẩn bên dưới */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--gdv-text);
+            color: var(--gdv-white);
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: bottom 0.3s ease-in-out;
+            z-index: 1000;
+        }
+        .gdv-bulk-actions.visible { bottom: 20px; }
     </style>
 </head>
 <body>
 
 <header class="gdv-main-header">
     <a href="/" class="gdv-brand">Hệ thống Chấm thi</a>
-    <nav class="gdv-nav" id="main-nav">
+    <nav class="gdv-nav" id="main-nav" role="navigation">
         <?php if ($auth->check()): ?>
-            <?php if ($auth->hasRole('grader') || $auth->hasRole('admin')): ?>
-                <a href="/grader/dashboard" class="<?php echo ($current_uri == '/grader/dashboard') ? 'active' : ''; ?>">Dashboard</a>
-                <a href="/grader/tests" class="<?php echo in_array($current_uri, ['/grader/tests', '/grader/tests/edit']) ? 'active' : ''; ?>">Quản lý Đề thi</a>
+            <div class="gdv-nav-item">
+                <a href="/grader/dashboard" class="<?php echo ($current_uri == '/grader/dashboard') ? 'active' : ''; ?>">Chấm Bài</a>
+            </div>
+            <div class="gdv-nav-item">
+                <a href="/grader/tests" class="<?php echo in_array($current_uri, ['/grader/tests', '/grader/tests/edit', '/admin/tests/bulk-generate']) ? 'active' : ''; ?>">Đề Thi</a>
+            </div>
+
+            <?php if ($auth->hasRole('admin')): 
+                $is_management_active = in_array($current_uri, [
+                    '/admin/questions', '/admin/questions/edit',
+                    '/admin/users', '/admin/users/edit',
+                    '/admin/contestants', '/admin/contestants/view',
+                    '/admin/import'
+                ]);
+            ?>
+                <div class="gdv-nav-item dropdown">
+                    <a href="#" class="dropdown-toggle <?php echo $is_management_active ? 'active' : ''; ?>" aria-haspopup="true" aria-expanded="false">
+                        Quản lý
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                    </a>
+                    <div class="gdv-dropdown-menu">
+                        <a href="/admin/questions" class="<?php echo in_array($current_uri, ['/admin/questions', '/admin/questions/edit']) ? 'active' : ''; ?>">Câu Hỏi</a>
+                        <a href="/admin/users" class="<?php echo in_array($current_uri, ['/admin/users', '/admin/users/edit']) ? 'active' : ''; ?>">Quản lý User</a>
+                        <a href="/admin/contestants" class="<?php echo in_array($current_uri, ['/admin/contestants', '/admin/contestants/view']) ? 'active' : ''; ?>">Thí Sinh</a>
+                        <a href="/admin/import" class="<?php echo ($current_uri == '/admin/import') ? 'active' : ''; ?>">Import Câu Hỏi</a>
+                    </div>
+                </div>
             <?php endif; ?>
-            <?php if ($auth->check() && $auth->hasRole('admin')): ?>
-                <a href="/admin/questions" class="<?php echo ($current_uri == '/admin/questions') ? 'active' : ''; ?>">Ngân hàng Câu hỏi</a>
-                <a href="/admin/users" class="<?php echo ($current_uri == '/admin/users') ? 'active' : ''; ?>">Quản lý User</a>
-                <a href="/admin/import" class="<?php echo ($current_uri == '/admin/import') ? 'active' : ''; ?>">Nhập liệu</a>
-            <?php endif; ?>
-            <a href="/logout">Đăng xuất (<?php echo htmlspecialchars($auth->user()['display_name']); ?>)</a>
+
+            <div class="gdv-nav-item dropdown">
+                <a href="#" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                    <?php echo htmlspecialchars($auth->user()['display_name']); ?>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                </a>
+                <div class="gdv-dropdown-menu">
+                    <a href="/logout">Đăng xuất</a>
+                </div>
+            </div>
         <?php else: ?>
-            <a href="/" class="<?php echo ($current_uri == '/') ? 'active' : ''; ?>">Vào thi</a>
-            <a href="/login" class="<?php echo ($current_uri == '/login') ? 'active' : ''; ?>">Đăng nhập</a>
+            <div class="gdv-nav-item"><a href="/leaderboard" class="<?php echo ($current_uri == '/leaderboard') ? 'active' : ''; ?>">Bảng Xếp Hạng</a></div>
+            <div class="gdv-nav-item"><a href="/" class="<?php echo ($current_uri == '/') ? 'active' : ''; ?>">Vào thi</a></div>
+            <div class="gdv-nav-item"><a href="/login" class="<?php echo ($current_uri == '/login') ? 'active' : ''; ?>">Đăng nhập</a></div>
         <?php endif; ?>
     </nav>
     <button class="gdv-hamburger" id="hamburger-button" aria-label="Menu" aria-controls="main-nav" aria-expanded="false">
@@ -226,6 +305,23 @@ document.addEventListener('DOMContentLoaded', function () {
             this.classList.toggle('is-active');
             nav.classList.toggle('is-active');
             this.setAttribute('aria-expanded', !isExpanded);
+        });
+
+        // Dropdown logic
+        document.querySelectorAll('.gdv-nav .dropdown-toggle').forEach(function (toggle) {
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                let dropdown = this.closest('.dropdown');
+                
+                // Close other open dropdowns
+                document.querySelectorAll('.gdv-nav .dropdown.is-open').forEach(function(openDropdown) {
+                    if (openDropdown !== dropdown) {
+                        openDropdown.classList.remove('is-open');
+                    }
+                });
+
+                dropdown.classList.toggle('is-open');
+            });
         });
     }
 });

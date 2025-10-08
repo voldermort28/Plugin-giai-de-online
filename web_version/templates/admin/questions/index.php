@@ -2,6 +2,7 @@
 // web_version/templates/admin/questions/index.php
 
 $page_title = 'Quản lý Câu hỏi';
+$page_title = 'Câu Hỏi';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_question') {
     $question_id_to_delete = $_POST['question_id'] ?? null;
@@ -58,7 +59,7 @@ include APP_ROOT . '/templates/partials/header.php';
 ?>
 
 <div class="gdv-header">
-    <h1>Ngân hàng câu hỏi</h1>
+    <h1><?php echo $page_title; ?></h1>
     <div>
         <a href="/admin/import" class="gdv-button secondary">Nhập từ file</a>
         <a href="/admin/questions/edit" class="gdv-button">Thêm câu hỏi mới</a>

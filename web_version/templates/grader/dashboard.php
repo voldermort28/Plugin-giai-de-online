@@ -61,7 +61,11 @@ if (!empty($graded_submission_ids)) {
             <?php else: foreach ($pending_submissions as $sub): ?>
                 <tr>
                     <td><strong><?php echo htmlspecialchars($sub['test_title']); ?></strong></td>
-                    <td><strong><?php echo htmlspecialchars($sub['contestant_name']); ?></strong></td>
+                    <td>
+                        <a href="/admin/contestants/view?phone=<?php echo urlencode($sub['contestant_phone']); ?>" class="gdv-action-link" target="_blank">
+                            <strong><?php echo htmlspecialchars($sub['contestant_name']); ?></strong>
+                        </a>
+                    </td>
                     <td><?php echo date('d/m/Y, H:i', strtotime($sub['submission_time'])); ?></td>
                     <td><a href="/grader/grade?submission_id=<?php echo $sub['submission_id']; ?>" class="gdv-action-link"><strong>Chấm bài</strong></a></td>
                 </tr>
@@ -90,7 +94,11 @@ if (!empty($graded_submission_ids)) {
             ?>
                 <tr>
                     <td><strong><?php echo htmlspecialchars($sub['test_title']); ?></strong></td>
-                    <td><strong><?php echo htmlspecialchars($sub['contestant_name']); ?></strong></td>
+                    <td>
+                        <a href="/admin/contestants/view?phone=<?php echo urlencode($sub['contestant_phone']); ?>" class="gdv-action-link" target="_blank">
+                            <strong><?php echo htmlspecialchars($sub['contestant_name']); ?></strong>
+                        </a>
+                    </td>
                     <td><?php echo date('d/m/Y, H:i', strtotime($sub['submission_time'])); ?></td>
                     <td><strong><?php echo intval($sub['score']); ?>/<?php echo $total_questions; ?></strong></td>
                     <td>

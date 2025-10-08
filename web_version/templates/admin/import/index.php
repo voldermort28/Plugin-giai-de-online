@@ -1,12 +1,13 @@
 <?php
 // web_version/templates/admin/import/index.php
 
-$page_title = 'Nhập câu hỏi từ CSV';
+$page_title = 'Import Câu Hỏi';
 
+$show_preview = false;
 $preview_data = [];
 $lines_to_process = [];
-$form_submitted = false;
 $text_data_submitted = '';
+$form_action = '';
 
 // Xử lý khi submit từ form nhập text
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_text_submit'])) {
@@ -15,11 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_text_submit'])
         $text_data_submitted = stripslashes($_POST['text_data']);
         $lines_to_process = preg_split('/\\r\\n|\\r|\\n/', $text_data_submitted);
     }
+    $form_action = 'preview';
 }
 
 // Xử lý khi submit từ form upload file
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_file_submit'])) {
-    $form_submitted = true;
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['csv_file'];
         $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -35,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_file_submit'])
     } else {
         set_message('error', 'Có lỗi xảy ra khi tải file lên hoặc bạn chưa chọn file.');
     }
+    $form_action = 'preview';
 }
 
 // Bước 2: Xử lý khi người dùng xác nhận import từ màn hình xem trước.
@@ -127,111 +129,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_import_submit
     redirect('/admin/import');
 }
 
-// Bước 1: Phân tích dữ liệu để xem trước.
-// Khối này sẽ chạy khi người dùng submit từ form nhập text hoặc upload file.
-if ($form_submitted && !empty($lines_to_process)) {
+// Bước 1: Phân tích dữ liệu để xem trước (nếu có)
+if ($form_action === 'preview') {
     $row_number = 0;
-    $preview_data = [];
     foreach ($lines_to_process as $line) {
         $row_number++;
         if (empty(trim($line)) || stripos(trim($line), 'question;type;option_a') === 0) {
             continue;
         }
         $data = str_getcsv($line, ";");
-        $preview_data[] = $data;
+        // Chỉ thêm vào preview nếu dòng có dữ liệu
+        if (!empty(array_filter($data))) {
+            $preview_data[] = $data;
+        }
     }
 
-    // Nếu có dữ liệu để xem trước, hiển thị màn hình preview và dừng lại.
     if (!empty($preview_data)) {
-        // Đặt tiêu đề lại cho trang preview
+        $show_preview = true;
         $page_title = 'Xem trước dữ liệu Import';
-        
-        // Hiển thị màn hình preview
-        echo '<div class="gdv-header"><h1>Xem trước dữ liệu Import</h1></div>';
-        echo '<div class="gdv-card">';
-        echo '<p>Vui lòng kiểm tra lại dữ liệu đã được phân tích dưới đây. Nếu mọi thứ chính xác, hãy nhấn "Xác nhận Import" để tiến hành lưu vào cơ sở dữ liệu.</p>';
-        echo '<div class="gdv-table-wrapper" style="max-height: 500px; overflow-y: auto;">';
-        echo '<table class="gdv-table">';
-        echo '<thead><tr><th>#</th><th>Nội dung</th><th>Loại</th><th>Lựa chọn A</th><th>Lựa chọn B</th><th>Lựa chọn C</th><th>Lựa chọn D</th><th>Đáp án</th></tr></thead>';
-        echo '<tbody>';
-        foreach ($preview_data as $index => $row) {
-            echo '<tr>';
-            echo '<td>' . ($index + 1) . '</td>';
-            echo '<td>' . htmlspecialchars(mb_substr($row[0] ?? '', 0, 50)) . '...</td>';
-            echo '<td><span class="gdv-status ' . htmlspecialchars($row[1] ?? '') . '">' . htmlspecialchars($row[1] ?? '') . '</span></td>';
-            // Hiển thị đầy đủ 4 lựa chọn
-            echo '<td>' . htmlspecialchars($row[2] ?? '') . '</td>';
-            echo '<td>' . htmlspecialchars($row[3] ?? '') . '</td>';
-            echo '<td>' . htmlspecialchars($row[4] ?? '') . '</td>';
-            echo '<td>' . htmlspecialchars($row[5] ?? '') . '</td>';
-            echo '<td><strong>' . htmlspecialchars($row[6] ?? '') . '</strong></td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table></div>';
-        
-        // Form xác nhận
-        echo '<form method="POST" action="/admin/import" style="margin-top: 20px; text-align: right;">';
-        echo '<input type="hidden" name="import_data" value="' . htmlspecialchars(json_encode($preview_data)) . '">';
-        echo '<a href="/admin/import" class="gdv-button secondary">Hủy bỏ</a>';
-        echo ' <button type="submit" name="confirm_import_submit" class="gdv-button">Xác nhận Import</button>';
-        echo '</form>';
-        echo '</div>';
-
-        // Dừng hiển thị phần còn lại của trang (form nhập liệu ban đầu)
-        include APP_ROOT . '/templates/partials/footer.php';
-        exit(); // Dùng exit() để đảm bảo script dừng hoàn toàn.
     } else {
-        // Nếu không có dữ liệu hợp lệ nào được tìm thấy
         set_message('error', 'Không tìm thấy dữ liệu hợp lệ để import. Vui lòng kiểm tra lại nội dung hoặc file của bạn.');
         redirect('/admin/import');
     }
 }
+
+include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<div class="gdv-header"><h1>Nhập câu hỏi</h1></div>
+<div class="gdv-header"><h1><?php echo htmlspecialchars($page_title); ?></h1></div>
 
-<div class="gdv-card" style="max-width: 900px;">
-    <h3 style="margin-top: 0;">Hướng dẫn định dạng</h3>
-    <p>Dữ liệu của bạn (dù nhập trực tiếp hay từ file) phải có **7 cột**, phân cách bằng dấu chấm phẩy (<code>;</code>). Dòng tiêu đề (nếu có) sẽ được tự động bỏ qua.</p>
-    <ul>
-        <li><strong>question:</strong> Nội dung đầy đủ của câu hỏi.</li>
-        <li><strong>type:</strong> Loại câu hỏi, chỉ chấp nhận <code>tu_luan</code> hoặc <code>trac_nghiem</code>.</li>
-        <li><strong>option_a:</strong> Nội dung lựa chọn A.</li>
-        <li><strong>option_b:</strong> Nội dung lựa chọn B.</li>
-        <li><strong>option_c:</strong> Nội dung lựa chọn C (có thể để trống).</li>
-        <li><strong>option_d:</strong> Nội dung lựa chọn D (có thể để trống).</li>
-        <li><strong>correct_answer:</strong> Đáp án đúng (ví dụ: <code>A</code> cho trắc nghiệm) hoặc đáp án mẫu cho tự luận.</li>
-    </ul>
-</div>
+<?php if ($show_preview): ?>
+    <div class="gdv-card">
+        <p>Vui lòng kiểm tra lại dữ liệu đã được phân tích dưới đây. Nếu mọi thứ chính xác, hãy nhấn "Xác nhận Import" để tiến hành lưu vào cơ sở dữ liệu.</p>
+        <div class="gdv-table-wrapper" style="max-height: 500px; overflow-y: auto;">
+            <table class="gdv-table">
+                <thead><tr><th>#</th><th>Nội dung</th><th>Loại</th><th>Lựa chọn A</th><th>Lựa chọn B</th><th>Lựa chọn C</th><th>Lựa chọn D</th><th>Đáp án</th></tr></thead>
+                <tbody>
+                <?php foreach ($preview_data as $index => $row): ?>
+                    <tr>
+                        <td><?php echo ($index + 1); ?></td>
+                        <td><?php echo htmlspecialchars(mb_substr($row[0] ?? '', 0, 50)); ?>...</td>
+                        <td><span class="gdv-status <?php echo htmlspecialchars($row[1] ?? ''); ?>"><?php echo htmlspecialchars($row[1] ?? ''); ?></span></td>
+                        <td><?php echo htmlspecialchars($row[2] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($row[3] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($row[4] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($row[5] ?? ''); ?></td>
+                        <td><strong><?php echo htmlspecialchars($row[6] ?? ''); ?></strong></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <form method="POST" action="/admin/import" style="margin-top: 20px; text-align: right;">
+            <input type="hidden" name="import_data" value="<?php echo htmlspecialchars(json_encode($preview_data)); ?>">
+            <a href="/admin/import" class="gdv-button secondary" style="margin-right: 10px;">Hủy bỏ</a>
+            <button type="submit" name="confirm_import_submit" class="gdv-button">Xác nhận Import</button>
+        </form>
+    </div>
+<?php else: ?>
+    <div class="gdv-card" style="max-width: 900px;">
+        <h3 style="margin-top: 0;">Hướng dẫn định dạng</h3>
+        <p>Dữ liệu của bạn (dù nhập trực tiếp hay từ file) phải có **7 cột**, phân cách bằng dấu chấm phẩy (<code>;</code>). Dòng tiêu đề (nếu có) sẽ được tự động bỏ qua.</p>
+        <ul>
+            <li><strong>question:</strong> Nội dung đầy đủ của câu hỏi.</li>
+            <li><strong>type:</strong> Loại câu hỏi, chỉ chấp nhận <code>tu_luan</code> hoặc <code>trac_nghiem</code>.</li>
+            <li><strong>option_a:</strong> Nội dung lựa chọn A.</li>
+            <li><strong>option_b:</strong> Nội dung lựa chọn B.</li>
+            <li><strong>option_c:</strong> Nội dung lựa chọn C (có thể để trống).</li>
+            <li><strong>option_d:</strong> Nội dung lựa chọn D (có thể để trống).</li>
+            <li><strong>correct_answer:</strong> Đáp án đúng (ví dụ: <code>A</code> cho trắc nghiệm) hoặc đáp án mẫu cho tự luận.</li>
+        </ul>
+    </div>
 
-<div class="gdv-card" style="max-width: 900px;">
-    <h3>Cách 1: Nhập trực tiếp</h3>
-    <p class="gdv-description">Dán nội dung câu hỏi vào khung bên dưới, mỗi câu hỏi một dòng.</p>
-    <form method="POST" action="/admin/import">
-        <div class="form-group">
-            <textarea name="text_data" rows="10" class="input" style="font-family: monospace;" placeholder="Nội dung câu hỏi 1;trac_nghiem;Lựa chọn A;Lựa chọn B;Lựa chọn C;Lựa chọn D;A&#10;Nội dung câu hỏi 2;tu_luan;;;;;Đáp án mẫu cho câu 2"><?php echo htmlspecialchars($text_data_submitted); ?></textarea>
-        </div>
-        <div class="form-group" style="text-align: right;">
-            <button type="submit" name="import_text_submit" class="gdv-button">Nhập từ Text</button>
-        </div>
-    </form>
-</div>
+    <div class="gdv-card" style="max-width: 900px;">
+        <h3>Cách 1: Nhập trực tiếp</h3>
+        <p class="gdv-description">Dán nội dung câu hỏi vào khung bên dưới, mỗi câu hỏi một dòng.</p>
+        <form method="POST" action="/admin/import">
+            <div class="form-group">
+                <textarea name="text_data" rows="10" class="input" style="font-family: monospace;" placeholder="Nội dung câu hỏi 1;trac_nghiem;Lựa chọn A;Lựa chọn B;Lựa chọn C;Lựa chọn D;A&#10;Nội dung câu hỏi 2;tu_luan;;;;;Đáp án mẫu cho câu 2"><?php echo htmlspecialchars($text_data_submitted); ?></textarea>
+            </div>
+            <div class="form-group" style="text-align: right;">
+                <button type="submit" name="import_text_submit" class="gdv-button">Xem trước & Nhập từ Text</button>
+            </div>
+        </form>
+    </div>
 
-<div class="gdv-card" style="max-width: 900px;">
-    <h3>Cách 2: Nhập từ file CSV</h3>
-    <form method="POST" action="/admin/import" enctype="multipart/form-data" class="gdv-uploader">
-        <div class="gdv-drop-zone">
-            <div class="gdv-drop-zone__icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></div>
-            <p class="gdv-drop-zone__text">Kéo & thả file vào đây</p>
-            <p class="gdv-drop-zone__subtext">hoặc</p>
-            <span class="gdv-drop-zone__button">Chọn file từ máy tính</span>
-            <input type="file" name="csv_file" id="csv_file" accept=".csv" class="hidden" required>
-        </div>
-        <div class="gdv-file-list"></div>
-        <p class="submit" style="margin-top: 30px; text-align: right;">
-            <button type="submit" name="import_file_submit" class="gdv-button">Xem trước & Nhập từ File</button>
-        </p>
-    </form>
-</div>
+    <div class="gdv-card" style="max-width: 900px;">
+        <h3>Cách 2: Nhập từ file CSV</h3>
+        <form method="POST" action="/admin/import" enctype="multipart/form-data" class="gdv-uploader">
+            <div class="gdv-drop-zone">
+                <div class="gdv-drop-zone__icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></div>
+                <p class="gdv-drop-zone__text">Kéo & thả file vào đây</p>
+                <p class="gdv-drop-zone__subtext">hoặc</p>
+                <span class="gdv-drop-zone__button">Chọn file từ máy tính</span>
+                <input type="file" name="csv_file" id="csv_file" accept=".csv" class="hidden" required>
+            </div>
+            <div class="gdv-file-list"></div>
+            <p class="submit" style="margin-top: 30px; text-align: right;">
+                <button type="submit" name="import_file_submit" class="gdv-button">Xem trước & Nhập từ File</button>
+            </p>
+        </form>
+    </div>
+<?php endif; ?>
 
 <?php include APP_ROOT . '/templates/partials/footer.php'; ?>

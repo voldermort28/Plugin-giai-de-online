@@ -1,16 +1,66 @@
 <?php
 // web_version/templates/admin/tests/index.php
 
-$page_title = 'Quản lý Bài kiểm tra';
+$page_title = 'Đề Thi';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_test') {
-    $test_id_to_delete = $_POST['test_id'] ?? null;
-    if ($test_id_to_delete) {
-        $db->delete('test_questions', 'test_id = ?', [$test_id_to_delete]);
-        $db->delete('tests', 'test_id = ?', [$test_id_to_delete]);
-        set_message('success', 'Đã xóa bài kiểm tra thành công.');
-        redirect('/grader/tests');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
+
+    if ($action === 'delete_test') {
+        $test_id_to_delete = $_POST['test_id'] ?? null;
+        if ($test_id_to_delete) {
+            $db->delete('test_questions', 'test_id = ?', [$test_id_to_delete]);
+            $db->delete('tests', 'test_id = ?', [$test_id_to_delete]);
+            set_message('success', 'Đã xóa bài kiểm tra thành công.');
+        }
+    } elseif ($action === 'reopen_test') {
+        $test_id_to_reopen = $_POST['test_id'] ?? null;
+        if ($test_id_to_reopen) {
+            $submission = $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id_to_reopen]);
+            if ($submission) {
+                $db->delete('answers', 'submission_id = ?', [$submission['submission_id']]);
+                $db->delete('submissions', 'submission_id = ?', [$submission['submission_id']]);
+                set_message('success', 'Đã mở lại bài kiểm tra. Mã đề này bây giờ có thể được sử dụng lại.');
+            } else {
+                set_message('error', 'Không tìm thấy bài làm nào được liên kết với mã đề này để mở lại.');
+            }
+        }
+    } elseif ($action === 'bulk_delete') {
+        $test_ids_to_delete = $_POST['test_ids'] ?? [];
+        if (!empty($test_ids_to_delete)) {
+            $deleted_count = 0;
+            foreach ($test_ids_to_delete as $test_id) {
+                $test_id = intval($test_id);
+                // Để an toàn, hãy kiểm tra xem bài làm có tồn tại không trước khi xóa
+                $submission = $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id]);
+                if ($submission) {
+                    $db->delete('answers', 'submission_id = ?', [$submission['submission_id']]);
+                    $db->delete('submissions', 'submission_id = ?', [$submission['submission_id']]);
+                }
+                $db->delete('test_questions', 'test_id = ?', [$test_id]);
+                $db->delete('tests', 'test_id = ?', [$test_id]);
+                $deleted_count++;
+            }
+            set_message('success', "Đã xóa thành công {$deleted_count} bài kiểm tra.");
+        }
+    } elseif ($action === 'bulk_reopen') {
+        $test_ids_to_reopen = $_POST['test_ids'] ?? [];
+        if (!empty($test_ids_to_reopen)) {
+            $reopened_count = 0;
+            foreach ($test_ids_to_reopen as $test_id) {
+                $test_id = intval($test_id);
+                $submission = $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id]);
+                if ($submission) {
+                    $db->delete('answers', 'submission_id = ?', [$submission['submission_id']]);
+                    $db->delete('submissions', 'submission_id = ?', [$submission['submission_id']]);
+                    $reopened_count++;
+                }
+            }
+            set_message('success', "Đã mở lại thành công {$reopened_count} bài kiểm tra.");
+        }
     }
+
+    redirect('/grader/tests');
 }
 
 // Lấy danh sách các cuộc thi để lọc
@@ -75,10 +125,10 @@ include APP_ROOT . '/templates/partials/header.php';
 ?>
 
 <div class="gdv-header">
-    <h1>Quản lý Bài kiểm tra</h1>
+    <h1><?php echo htmlspecialchars($page_title); ?></h1>
     <div>
-        <a href="/admin/tests/bulk-generate" class="gdv-button secondary">Tạo đề hàng loạt</a>
-        <a href="/grader/tests/edit" class="gdv-button">Thêm bài kiểm tra mới</a>
+        <a href="/admin/tests/bulk-generate" class="gdv-button secondary">Tạo hàng loạt</a>
+        <a href="/grader/tests/edit" class="gdv-button">Thêm đề mới</a>
     </div>
 </div>
 
@@ -108,6 +158,7 @@ include APP_ROOT . '/templates/partials/header.php';
     <table class="gdv-table">
         <thead>
             <tr>
+                <th style="width: 50px;"><input type="checkbox" id="select-all-tests"></th>
                 <th>ID</th>
                 <th>Mã đề</th>
                 <th>Tình trạng</th>
@@ -126,6 +177,7 @@ include APP_ROOT . '/templates/partials/header.php';
                     $status_text = $is_used ? 'Đã dùng' : 'Sẵn sàng';
                 ?>
                     <tr class="<?php echo $status_class; ?>">
+                        <td><input type="checkbox" class="test-checkbox" name="test_ids[]" value="<?php echo $test['test_id']; ?>"></td>
                         <td><?php echo $test['test_id']; ?></td>
                         <td>
                             <code><?php echo htmlspecialchars($test['ma_de']); ?></code>
@@ -138,9 +190,14 @@ include APP_ROOT . '/templates/partials/header.php';
                             <?php if (!$is_used): // Chỉ cho phép sửa khi đề chưa được sử dụng ?>
                                 <a href="/grader/tests/edit?id=<?php echo $test['test_id']; ?>" class="gdv-action-link">Sửa</a>
                             <?php else: ?>
-                                <span class="gdv-action-link" style="color: var(--gdv-text-secondary); cursor: not-allowed;" title="Không thể sửa đề đã được sử dụng">Sửa</span>
+                                <span class="gdv-action-link" style="color: var(--gdv-text-secondary); cursor: not-allowed;" title="Không thể sửa đề đã được sử dụng. Hãy mở lại đề nếu muốn sửa.">Sửa</span>
+                                <form method="POST" action="/grader/tests" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn MỞ LẠI bài kiểm tra này? Hành động này sẽ XÓA bài làm hiện tại của thí sinh.');">
+                                    <input type="hidden" name="action" value="reopen_test">
+                                    <input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
+                                    <button type="submit" class="gdv-action-link" style="border:none; background:none; cursor:pointer; color: var(--gdv-success);">Mở lại</button>
+                                </form>
                             <?php endif; ?>
-                            <form method="POST" action="/grader/tests" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài kiểm tra này?');">
+                            <form method="POST" action="/grader/tests" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài kiểm tra này?');">
                                 <input type="hidden" name="action" value="delete_test"><input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
                                 <button type="submit" class="gdv-action-link" style="border:none; background:none; cursor:pointer; color: #dc3545;">Xóa</button>
                             </form>
@@ -151,6 +208,24 @@ include APP_ROOT . '/templates/partials/header.php';
         </tbody>
     </table>
 </div>
+
+<!-- Bulk Actions Bar -->
+<div class="gdv-bulk-actions" id="bulk-actions-bar">
+    <span id="bulk-actions-count">Đã chọn 0 mục</span>
+    <div style="display: flex; gap: 10px;">
+        <form id="bulk-reopen-form" method="POST" action="/grader/tests" onsubmit="return confirm('Mở lại các đề đã chọn? Bài làm của thí sinh sẽ bị xóa.');">
+            <input type="hidden" name="action" value="bulk_reopen">
+        </form>
+        <button type="submit" form="bulk-reopen-form" class="gdv-button" style="background-color: var(--gdv-success);">Mở lại đã chọn</button>
+
+        <form id="bulk-delete-form" method="POST" action="/grader/tests" onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN các mục đã chọn?');">
+            <input type="hidden" name="action" value="bulk_delete">
+        </form>
+        <button type="submit" form="bulk-delete-form" class="gdv-button danger">Xóa đã chọn</button>
+    </div>
+    <button type="button" id="bulk-actions-cancel" class="gdv-button secondary">Hủy</button>
+</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -165,6 +240,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 1500);
             });
         });
+    });
+
+    // Bulk actions logic
+    const selectAllCheckbox = document.getElementById('select-all-tests');
+    const itemCheckboxes = document.querySelectorAll('.test-checkbox');
+    const bulkActionsBar = document.getElementById('bulk-actions-bar');
+    const bulkActionsCount = document.getElementById('bulk-actions-count');
+    const bulkDeleteForm = document.getElementById('bulk-delete-form');
+    const bulkReopenForm = document.getElementById('bulk-reopen-form');
+    const cancelBulkActions = document.getElementById('bulk-actions-cancel');
+
+    function updateBulkActionsBar() {
+        const selectedCheckboxes = document.querySelectorAll('.test-checkbox:checked');
+        const count = selectedCheckboxes.length;
+
+        if (count > 0) {
+            bulkActionsCount.textContent = `Đã chọn ${count} mục`;
+            bulkActionsBar.classList.add('visible');
+
+            // Cập nhật form xóa hàng loạt
+            bulkDeleteForm.innerHTML = '<input type="hidden" name="action" value="bulk_delete">'; // Reset form
+            bulkReopenForm.innerHTML = '<input type="hidden" name="action" value="bulk_reopen">'; // Reset form
+
+            selectedCheckboxes.forEach(checkbox => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'test_ids[]';
+                input.value = checkbox.value;
+                bulkDeleteForm.appendChild(input.cloneNode());
+                bulkReopenForm.appendChild(input.cloneNode());
+            });
+        } else {
+            bulkActionsBar.classList.remove('visible');
+        }
+    }
+
+    selectAllCheckbox.addEventListener('change', function() {
+        itemCheckboxes.forEach(checkbox => checkbox.checked = this.checked);
+        updateBulkActionsBar();
+    });
+
+    itemCheckboxes.forEach(checkbox => checkbox.addEventListener('change', updateBulkActionsBar));
+
+    cancelBulkActions.addEventListener('click', function() {
+        selectAllCheckbox.checked = false;
+        itemCheckboxes.forEach(checkbox => checkbox.checked = false);
+        updateBulkActionsBar();
     });
 });
 </script>
