@@ -5,7 +5,7 @@ $page_title = 'Đăng nhập';
 
 // Nếu đã đăng nhập, chuyển hướng đi ngay lập tức
 if ($auth->check()) {
-    redirect($auth->hasRole('admin') ? '/admin/tests' : '/grader/dashboard');
+    redirect('/grader/dashboard');
 }
 
 // Xử lý form đăng nhập khi có POST request
@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($auth->login($username, $password)) {
         set_message('success', 'Đăng nhập thành công!');
-        redirect($auth->hasRole('admin') ? '/admin/tests' : '/grader/dashboard');
+        redirect('/grader/dashboard');
     } else {
         set_message('error', 'Tên đăng nhập hoặc mật khẩu không đúng.');
         // Luôn redirect sau POST, kể cả khi lỗi

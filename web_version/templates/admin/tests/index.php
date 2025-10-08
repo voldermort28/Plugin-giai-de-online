@@ -55,16 +55,19 @@ $sql .= " GROUP BY t.test_id ORDER BY t.created_at DESC";
 
 $tests = $db->fetchAll($sql, $params);
 
-// Đếm số lượng cho mỗi tab
-$count_all_result = $db->fetch("SELECT COUNT(*) FROM tests");
-$count_all = $count_all_result ? array_values($count_all_result)[0] : 0;
-
-$count_ready_result = $db->fetch("SELECT COUNT(DISTINCT t.test_id) FROM tests t LEFT JOIN submissions s ON t.test_id = s.test_id WHERE s.submission_id IS NULL");
-$count_ready = $count_ready_result ? array_values($count_ready_result)[0] : 0;
-
-$count_used_result = $db->fetch("SELECT COUNT(DISTINCT t.test_id) FROM tests t JOIN submissions s ON t.test_id = s.test_id");
-$count_used = $count_used_result ? array_values($count_used_result)[0] : 0;
-
+// Tối ưu hóa: Đếm số lượng cho các tab trong một truy vấn duy nhất
+$count_sql = "
+    SELECT
+        COUNT(DISTINCT t.test_id) AS total,
+        COUNT(DISTINCT CASE WHEN s.submission_id IS NULL THEN t.test_id END) AS ready,
+        COUNT(DISTINCT CASE WHEN s.submission_id IS NOT NULL THEN t.test_id END) AS used
+    FROM tests t
+    LEFT JOIN submissions s ON t.test_id = s.test_id
+";
+$counts_result = $db->fetch($count_sql);
+$count_all = $counts_result['total'] ?? 0;
+$count_ready = $counts_result['ready'] ?? 0;
+$count_used = $counts_result['used'] ?? 0;
 
 
 // Include header sau khi tất cả logic đã được xử lý

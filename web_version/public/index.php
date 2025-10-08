@@ -23,6 +23,7 @@ $request_uri = strtok($_SERVER["REQUEST_URI"], '?');
 $routes = [
     '/' => ['file' => APP_ROOT . '/templates/test/entry.php', 'auth' => false],
     '/test' => ['file' => APP_ROOT . '/templates/test/take.php', 'auth' => false],
+    '/test/confirm' => ['file' => APP_ROOT . '/templates/test/confirm.php', 'auth' => false],
     '/login' => ['file' => APP_ROOT . '/templates/auth/login.php', 'auth' => false],
     '/logout' => ['file' => APP_ROOT . '/templates/auth/logout.php', 'auth' => true],
     '/grader/dashboard' => ['file' => APP_ROOT . '/templates/grader/dashboard.php', 'auth' => true, 'role' => 'grader'],
