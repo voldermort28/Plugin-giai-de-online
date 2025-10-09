@@ -40,7 +40,7 @@ $routes = [
     '/admin/questions/edit' => ['file' => APP_ROOT . '/templates/admin/questions/edit.php', 'auth' => true, 'role' => 'admin'],
     '/admin/users' => ['file' => APP_ROOT . '/templates/admin/users/index.php', 'auth' => true, 'role' => 'admin'],
     '/admin/users/edit' => ['file' => APP_ROOT . '/templates/admin/users/edit.php', 'auth' => true, 'role' => 'admin'],
-    '/admin/leaderboard' => ['file' => APP_ROOT . '/templates/grader/index.php', 'auth' => true, 'role' => 'grader'],
+    '/admin/leaderboard' => ['file' => APP_ROOT . '/templates/admin/leaderboard/index.php', 'auth' => true, 'role' => 'admin'],
     '/admin/import' => ['file' => APP_ROOT . '/templates/admin/import/index.php', 'auth' => true, 'role' => 'admin'],
 ];
 

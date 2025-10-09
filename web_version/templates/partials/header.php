@@ -18,6 +18,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             --gdv-success-bg: #F0FDF4; --gdv-error-bg: #FEF2F2; --gdv-warning-bg: #FFFBEB;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--gdv-background); color: var(--gdv-text); line-height: 1.6; }
+        main.gdv-container { min-height: calc(100vh - 180px); /* Push footer down */ }
         .gdv-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
         /* Typography */
@@ -321,7 +322,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
     </button>
 </header>
 
-<main class="gdv-container">
+<main class="gdv-container" role="main">
     <?php
     // Hiển thị thông báo nếu có
     if (has_message()) {

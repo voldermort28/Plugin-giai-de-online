@@ -25,3 +25,30 @@ function has_message() {
     // Check if the single message exists.
     return !empty($_SESSION['message']);
 }
+
+/**
+ * Tạo và lưu trữ CSRF token trong session nếu chưa tồn tại.
+ * @return string CSRF token.
+ */
+function csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * In ra một thẻ input hidden chứa CSRF token.
+ */
+function csrf_field() {
+    echo '<input type="hidden" name="csrf_token" value="' . csrf_token() . '">';
+}
+
+/**
+ * Xác thực CSRF token được gửi từ form.
+ * @param string $token Token được gửi từ form.
+ * @return bool True nếu hợp lệ, False nếu không.
+ */
+function verify_csrf_token($token) {
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
