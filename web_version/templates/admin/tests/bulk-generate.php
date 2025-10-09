@@ -6,8 +6,13 @@ $page_title = 'Tạo Đề thi Hàng loạt';
 // Xử lý form khi submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_generate_submit'])) {
     // Lấy và làm sạch dữ liệu
-    // Thay thế hàm sanitize_text_field() của WordPress bằng htmlspecialchars() của PHP
-    $contest_name = trim(htmlspecialchars($_POST['contest_name'], ENT_QUOTES, 'UTF-8'));
+    $contest_name_select = $_POST['contest_name_select'] ?? '';
+    if ($contest_name_select === '__new__') {
+        $contest_name = trim(htmlspecialchars($_POST['contest_name_new'], ENT_QUOTES, 'UTF-8'));
+    } else {
+        $contest_name = trim(htmlspecialchars($contest_name_select, ENT_QUOTES, 'UTF-8'));
+    }
+
     $num_tests = intval($_POST['num_tests']);
     $num_questions = intval($_POST['num_questions']);
     $time_limit = intval($_POST['time_limit']);
@@ -19,12 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_generate_submit'
     } else {
         $generated_count = 0;
         $batch_id = uniqid(); // ID duy nhất cho đợt tạo đề này
+        
+        // Lấy số thứ tự đề thi lớn nhất hiện có của cuộc thi để đánh số tiếp
+        $last_test_number_row = $db->fetch("SELECT COUNT(test_id) as count FROM tests WHERE contest_name = ?", [$contest_name]);
+        $start_index = ($last_test_number_row && $last_test_number_row['count'] > 0) ? intval($last_test_number_row['count']) : 0;
 
         for ($i = 0; $i < $num_tests; $i++) {
             shuffle($question_pool_ids);
             $random_questions_for_test = array_slice($question_pool_ids, 0, $num_questions);
 
-            $test_title = $contest_name . ' - Đề #' . ($i + 1);
+            $test_title = $contest_name . ' - Đề #' . ($start_index + $i + 1);
             $ma_de = strtoupper(substr(md5($batch_id . '-' . $i), 0, 8));
 
             $test_data = [
@@ -53,6 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_generate_submit'
     }
 }
 
+$existing_contests = $db->fetchAll("SELECT DISTINCT contest_name FROM tests WHERE contest_name IS NOT NULL AND contest_name != '' ORDER BY contest_name");
+$preselected_contest = $_GET['contest'] ?? '';
+
 $all_questions = $db->fetchAll("SELECT question_id, content, type FROM questions ORDER BY created_at DESC");
 
 // Include header sau khi tất cả logic đã được xử lý
@@ -68,9 +80,20 @@ include APP_ROOT . '/templates/partials/header.php';
     <p class="gdv-description">Sử dụng công cụ này để tạo hàng loạt các đề thi riêng lẻ từ một ngân hàng câu hỏi do bạn chỉ định.</p>
     
     <div class="form-group">
-        <label for="contest_name">Tên Cuộc thi / Đợt kiểm tra</label>
-        <input type="text" id="contest_name" name="contest_name" class="input" required>
-        <small class="gdv-description" style="margin-top: 5px;">Tên này sẽ được dùng để nhóm và quản lý các đề đã tạo.</small>
+        <label for="contest_name_select">Chọn Cuộc thi hoặc Tạo mới</label>
+        <select id="contest_name_select" name="contest_name_select" class="input" required>
+            <option value="">-- Vui lòng chọn --</option>
+            <?php foreach ($existing_contests as $contest): ?>
+                <option value="<?php echo htmlspecialchars($contest['contest_name']); ?>" <?php echo ($preselected_contest === $contest['contest_name']) ? 'selected' : ''; ?>>
+                    Thêm vào: <?php echo htmlspecialchars($contest['contest_name']); ?>
+                </option>
+            <?php endforeach; ?>
+            <option value="__new__">Tạo cuộc thi mới...</option>
+        </select>
+    </div>
+    <div class="form-group" id="new-contest-group" style="display: none;">
+        <label for="contest_name_new">Tên Cuộc thi mới</label>
+        <input type="text" id="contest_name_new" name="contest_name_new" class="input">
     </div>
     <div class="form-group">
         <label for="num_tests">Số lượng đề thi muốn tạo</label>
@@ -119,10 +142,28 @@ include APP_ROOT . '/templates/partials/header.php';
 </form>
 
 <script>
-document.getElementById('select-all-questions').addEventListener('change', function(e) {
-    document.querySelectorAll('.question-checkbox').forEach(checkbox => {
-        checkbox.checked = e.target.checked;
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('select-all-questions').addEventListener('change', function(e) {
+        document.querySelectorAll('.question-checkbox').forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+        });
     });
+
+    const contestSelect = document.getElementById('contest_name_select');
+    const newContestGroup = document.getElementById('new-contest-group');
+    const newContestInput = document.getElementById('contest_name_new');
+
+    function toggleNewContestInput() {
+        if (contestSelect.value === '__new__') {
+            newContestGroup.style.display = 'block';
+            newContestInput.required = true;
+        } else {
+            newContestGroup.style.display = 'none';
+            newContestInput.required = false;
+        }
+    }
+    contestSelect.addEventListener('change', toggleNewContestInput);
+    toggleNewContestInput(); // Run on page load
 });
 </script>
 

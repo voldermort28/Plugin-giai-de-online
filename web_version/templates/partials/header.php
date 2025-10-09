@@ -216,6 +216,18 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-rank-1 { color: #D4AF37; } /* Gold */
         .gdv-rank-2 { color: #A8A29E; } /* Silver */
         .gdv-rank-3 { color: #A16207; } /* Bronze */
+        
+        /* Rank colors for leaderboard rows */
+        .gdv-table tr.gdv-rank-1 { background-color: rgba(255, 215, 0, 0.1); }
+        .gdv-table tr.gdv-rank-2 { background-color: rgba(192, 192, 192, 0.1); }
+        .gdv-table tr.gdv-rank-3 { background-color: rgba(205, 127, 50, 0.1); }
+        .gdv-table tr[class*="gdv-rank-"] .gdv-rank-cell {
+            position: relative;
+            overflow: hidden;
+        }
+        .gdv-table tr.gdv-rank-1 .gdv-rank-cell { color: #B8860B; }
+        .gdv-table tr.gdv-rank-2 .gdv-rank-cell { color: #696969; }
+        .gdv-table tr.gdv-rank-3 .gdv-rank-cell { color: #8B4513; }
 
 
         /* Status Tags */

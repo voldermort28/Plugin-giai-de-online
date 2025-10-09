@@ -144,7 +144,7 @@ include APP_ROOT . '/templates/partials/header.php';
         <a href="?status=ready&contest=<?php echo urlencode($filter_contest); ?>" class="gdv-button <?php echo $filter_status === 'ready' ? '' : 'secondary'; ?>">Sẵn sàng (<?php echo $count_ready; ?>)</a>
         <a href="?status=used&contest=<?php echo urlencode($filter_contest); ?>" class="gdv-button <?php echo $filter_status === 'used' ? '' : 'secondary'; ?>">Đã dùng (<?php echo $count_used; ?>)</a>
     </div>
-    <div>
+    <div style="display: flex; align-items: flex-end; gap: 15px;">
         <form method="GET" action="/grader/tests" style="display: flex; gap: 15px; align-items: flex-end;">
             <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
             <div style="flex-grow: 1;">
@@ -157,7 +157,10 @@ include APP_ROOT . '/templates/partials/header.php';
                 </select>
             </div>
         </form>
-        </div>
+        <?php if (!empty($filter_contest)): ?>
+            <a href="/admin/tests/bulk-generate?contest=<?php echo urlencode($filter_contest); ?>" class="gdv-button">Thêm đề</a>
+        <?php endif; ?>
+    </div>
 </div>
 
 <div class="gdv-table-wrapper">
