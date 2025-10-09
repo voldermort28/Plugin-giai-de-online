@@ -92,31 +92,30 @@ if (!empty($questions)) {
 include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<div class="gdv-header">
-    <h1><?php echo $page_title; ?></h1>
-    <div>
+<div class="gdv-filter-bar">
+    <div class="gdv-filter-bar__actions">
         <a href="/admin/import" class="gdv-button secondary">Nhập từ file</a>
         <a href="/admin/questions/edit" class="gdv-button">Thêm câu hỏi mới</a>
     </div>
 </div>
 
-<div class="gdv-card" style="margin-top: 0; margin-bottom: 20px; padding: 20px;">
-    <form method="GET" action="/admin/questions" style="display: flex; gap: 15px; align-items: flex-end;">
-        <div style="flex-grow: 1;">
-            <label for="search_term">Tìm kiếm theo nội dung</label>
-            <input type="search" id="search_term" name="search_term" class="input" value="<?php echo htmlspecialchars($search_term); ?>" placeholder="Nhập từ khóa...">
-        </div>
-        <div style="flex-basis: 200px;">
-            <label for="filter_type">Lọc theo loại</label>
-            <select id="filter_type" name="filter_type" class="input">
-                <option value="">Tất cả các loại</option>
-                <option value="trac_nghiem" <?php echo ($filter_type === 'trac_nghiem') ? 'selected' : ''; ?>>Trắc nghiệm</option>
-                <option value="tu_luan" <?php echo ($filter_type === 'tu_luan') ? 'selected' : ''; ?>>Tự luận</option>
-            </select>
-        </div>
-        <button type="submit" class="gdv-button">Lọc</button>
-    </form>
-</div>
+<form method="GET" action="/admin/questions" class="gdv-card" style="margin-top: 0; margin-bottom: 20px; padding: 20px;">
+    <div style="display: flex; gap: 15px; align-items: flex-end;">
+            <div style="flex-grow: 1;">
+                <label for="search_term">Tìm kiếm theo nội dung</label>
+                <input type="search" id="search_term" name="search_term" class="input" value="<?php echo htmlspecialchars($search_term); ?>" placeholder="Nhập từ khóa...">
+            </div>
+            <div style="flex-basis: 200px;">
+                <label for="filter_type">Lọc theo loại</label>
+                <select id="filter_type" name="filter_type" class="input">
+                    <option value="">Tất cả các loại</option>
+                    <option value="trac_nghiem" <?php echo ($filter_type === 'trac_nghiem') ? 'selected' : ''; ?>>Trắc nghiệm</option>
+                    <option value="tu_luan" <?php echo ($filter_type === 'tu_luan') ? 'selected' : ''; ?>>Tự luận</option>
+                </select>
+            </div>
+            <button type="submit" class="gdv-button">Lọc</button>
+    </div>
+</form>
 
 <div class="gdv-table-wrapper">
     <table class="gdv-table">

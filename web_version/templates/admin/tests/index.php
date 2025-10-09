@@ -130,15 +130,14 @@ $count_used = $counts_result['used'] ?? 0;
 include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<div class="gdv-header">
-    <h1><?php echo htmlspecialchars($page_title); ?></h1>
-    <div>
+<div class="gdv-filter-bar">
+    <div class="gdv-filter-bar__actions">
         <a href="/admin/tests/bulk-generate" class="gdv-button secondary">Tạo hàng loạt</a>
         <a href="/grader/tests/edit" class="gdv-button">Thêm đề mới</a>
     </div>
 </div>
 
-<div class="gdv-card" style="margin-top: 0; margin-bottom: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+<div class="gdv-card" style="margin-top: 0; margin-bottom: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap;">
     <div class="gdv-tabs" style="display: flex; gap: 10px;">
         <a href="?status=all&contest=<?php echo urlencode($filter_contest); ?>" class="gdv-button <?php echo $filter_status === 'all' ? '' : 'secondary'; ?>">Tất cả (<?php echo $count_all; ?>)</a>
         <a href="?status=ready&contest=<?php echo urlencode($filter_contest); ?>" class="gdv-button <?php echo $filter_status === 'ready' ? '' : 'secondary'; ?>">Sẵn sàng (<?php echo $count_ready; ?>)</a>

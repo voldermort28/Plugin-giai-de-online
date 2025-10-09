@@ -1,7 +1,7 @@
 <?php
 // web_version/templates/grader/dashboard.php
 
-$page_title = 'Dashboard Giám khảo';
+$page_title = 'Chấm Bài';
 include APP_ROOT . '/templates/partials/header.php';
 
 // Fetch pending submissions
@@ -39,10 +39,6 @@ if (!empty($graded_submission_ids)) {
     }
 }
 ?>
-
-<div class="gdv-header">
-    <h1>Dashboard Giám khảo</h1>
-</div>
 
 <h2 style="margin-top: 2rem;">Các bài thi cần chấm</h2>
 <div class="gdv-table-wrapper">

@@ -23,9 +23,10 @@ $users = $db->fetchAll("SELECT user_id, username, display_name, role FROM users 
 include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<div class="gdv-header">
-    <h1>Quản lý Người dùng</h1>
-    <a href="/admin/users/edit" class="gdv-button">Thêm người dùng mới</a>
+<div class="gdv-filter-bar" style="justify-content: flex-end;">
+    <div class="gdv-filter-bar__actions">
+        <a href="/admin/users/edit" class="gdv-button">Thêm người dùng mới</a>
+    </div>
 </div>
 
 <div class="gdv-table-wrapper">

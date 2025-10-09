@@ -14,7 +14,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         :root { /* Inspired by the reference image */
             --gdv-primary: #4F46E5; --gdv-primary-dark: #4338CA; --gdv-white: #fff;
             --gdv-background: #F3F4F6; --gdv-border: #E5E7EB; --gdv-text: #1F2937;
-            --gdv-text-secondary: #6B7280; --gdv-danger: #DC2626; --gdv-success: #16A34A;
+            --gdv-text-secondary: #6B7280; --gdv-text-light: #D1D5DB; --gdv-danger: #DC2626; --gdv-success: #16A34A;
             --gdv-success-bg: #F0FDF4; --gdv-error-bg: #FEF2F2; --gdv-warning-bg: #FFFBEB;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--gdv-background); color: var(--gdv-text); line-height: 1.6; }
@@ -279,12 +279,113 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             border: 1px solid var(--gdv-border);
             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
+
+        /* New Page Banner */
+        .gdv-page-banner {
+            background-image: url('https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 1.5rem;
+            text-align: center;
+            position: relative;
+            color: var(--gdv-white);
+            margin-bottom: 2rem;
+        }
+        .gdv-page-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+        .gdv-page-banner .banner-content {
+            position: relative;
+            z-index: 1;
+        }
+        .gdv-page-banner h1 {
+            color: var(--gdv-white);
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        /* New Footer */
+        .gdv-main-footer-v2 {
+            background-color: #1d1d1d;
+            color: var(--gdv-text-light);
+            padding: 50px 20px;
+            font-size: 14px;
+        }
+        .gdv-main-footer-v2 .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+        }
+        .gdv-main-footer-v2 .footer-column h4 {
+            color: var(--gdv-white);
+            margin-bottom: 20px;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+        .gdv-main-footer-v2 .footer-column p, .gdv-main-footer-v2 .footer-column a {
+            color: var(--gdv-text-light);
+            text-decoration: none;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .gdv-main-footer-v2 .footer-column a:hover {
+            color: var(--gdv-white);
+            text-decoration: underline;
+        }
+        .gdv-main-footer-v2 .footer-bottom {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #374151;
+            font-size: 13px;
+            color: var(--gdv-text-secondary);
+        }
+
+        .gdv-filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: var(--gdv-white);
+            border-radius: 12px;
+            border: 1px solid var(--gdv-border);
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
     </style>
     <style>
         /* ==========================================================================
            Custom Components for Test Taking UI
            ========================================================================== */
+        /* --- Test Timer --- */
+        #lb-test-timer {
+            position: fixed;
+            top: 80px; /* Dưới header 20px */
+            right: 20px;
+            z-index: 1000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f0f0f0;
+            background-color: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(5px);
+            border-radius: 10px;
+            padding: 10px 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            min-width: 160px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
+        
         /* --- Test Timer Warning Effect --- */
         #lb-test-timer.warning {
             animation: neon-glow-warning 1s infinite alternate;
@@ -417,6 +518,15 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
     </button>
 </header>
 
+<?php if (isset($page_title) && !empty($page_title)): ?>
+<div class="gdv-page-banner">
+    <div class="banner-content">
+        <h1><?php echo htmlspecialchars($page_title); ?></h1>
+    </div>
+</div>
+<?php endif; ?>
+
+
 <main class="gdv-container" role="main">
     <?php
     // Hiển thị thông báo nếu có
@@ -437,6 +547,17 @@ document.addEventListener('DOMContentLoaded', function () {
             this.classList.toggle('is-active');
             nav.classList.toggle('is-active');
             this.setAttribute('aria-expanded', !isExpanded);
+        });
+
+        // Thêm tính năng: click ra ngoài để đóng menu
+        document.addEventListener('click', function(event) {
+            // Kiểm tra xem menu có đang mở không, và điểm click có nằm ngoài cả menu (nav) và nút hamburger không
+            const isClickOutside = !nav.contains(event.target) && !hamburger.contains(event.target);
+            if (nav.classList.contains('is-active') && isClickOutside) {
+                nav.classList.remove('is-active');
+                hamburger.classList.remove('is-active');
+                hamburger.setAttribute('aria-expanded', 'false');
+            }
         });
     }
 });

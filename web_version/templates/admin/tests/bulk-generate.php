@@ -71,11 +71,6 @@ $all_questions = $db->fetchAll("SELECT question_id, content, type FROM questions
 include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<div class="gdv-header">
-    <h1><?php echo $page_title; ?></h1>
-    <a href="/grader/tests" class="gdv-button secondary">Quay lại danh sách</a>
-</div>
-
 <form method="POST" action="/admin/tests/bulk-generate" class="gdv-card" style="max-width: 800px;">
     <p class="gdv-description">Sử dụng công cụ này để tạo hàng loạt các đề thi riêng lẻ từ một ngân hàng câu hỏi do bạn chỉ định.</p>
     

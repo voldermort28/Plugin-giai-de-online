@@ -37,10 +37,6 @@ if (!empty($current_contest)) {
 include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<div class="gdv-header">
-    <h1><?php echo htmlspecialchars($page_title); ?></h1>
-</div>
-
 <div class="gdv-card" style="margin-top: 0; margin-bottom: 20px; padding: 20px;">
     <form method="GET" action="/admin/leaderboard" style="display: flex; gap: 15px; align-items: flex-end;">
         <div style="flex-grow: 1;">
