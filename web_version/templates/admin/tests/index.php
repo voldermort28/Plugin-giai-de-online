@@ -5,7 +5,12 @@ $page_title = 'Đề Thi';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
-    validate_csrf_token(); // Validate CSRF token for all POST actions
+    
+    // Sửa lỗi: Gọi đúng hàm verify_csrf_token() và xử lý lỗi
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_message('error', 'Lỗi xác thực (CSRF token không hợp lệ). Vui lòng thử lại.');
+        redirect('/grader/tests');
+    }
 
     if ($action === 'delete_test') {
         $test_id_to_delete = $_POST['test_id'] ?? null;

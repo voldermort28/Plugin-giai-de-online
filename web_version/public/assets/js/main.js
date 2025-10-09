@@ -97,10 +97,7 @@ jQuery(document).ready(function($) {
 
             // Thêm hiệu ứng cảnh báo khi gần hết giờ
             if (timeInSeconds <= 60) {
-                timerElement.css({
-                    'animation': 'neon-glow-warning 1s infinite alternate',
-                    'color': '#ff4d4d'
-                });
+                timerElement.addClass('warning');
             }
         }, 1000);
     }

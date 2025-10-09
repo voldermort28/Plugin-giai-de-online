@@ -95,7 +95,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-nav { display: flex; align-items: center; gap: 6px; }
         .gdv-nav-item > a {
             text-decoration: none;
-            color: #ffffff; font-weight: 500;
+            color: var(--gdv-white); font-weight: 500;
             padding: 8px 12px; border-radius: 8px; white-space: nowrap;
             display: flex; align-items: center; gap: 4px; transition: background-color 0.2s, color 0.2s;
         }
@@ -149,7 +149,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             }
             .gdv-hamburger .bar {
                 display: block; width: 25px; height: 3px;
-                background-color: var(--gdv-text); margin: 5px 0;
+                background-color: var(--gdv-white); margin: 5px 0;
                 transition: 0.4s;
             }
             .gdv-hamburger.is-active .bar:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
@@ -180,6 +180,11 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             }
             .gdv-nav.is-active { transform: translateY(0); }
             .gdv-nav a { width: 100%; box-sizing: border-box; }
+            
+            /* Đổi màu chữ menu về màu tối trên mobile vì nền trắng */
+            .gdv-nav-item > a {
+                color: var(--gdv-text);
+            }
 
             .gdv-card {
                 padding: 20px;
@@ -259,6 +264,82 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             border-radius: 12px;
             border: 1px solid var(--gdv-border);
             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+    </style>
+    <style>
+        /* ==========================================================================
+           Custom Components for Test Taking UI
+           ========================================================================== */
+
+        /* --- Test Timer Warning Effect --- */
+        #lb-test-timer.warning {
+            animation: neon-glow-warning 1s infinite alternate;
+            color: #ff4d4d;
+        }
+        @keyframes neon-glow-warning {
+            from { box-shadow: 0 0 25px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 0, 0, 0.5); }
+            to { box-shadow: 0 0 25px rgba(0, 0, 0, 0.5), 0 0 60px rgba(255, 0, 0, 0.8); }
+        }
+
+        /* --- Modern Radio & Checkbox --- */
+        .test-options label {
+            position: relative;
+            padding-left: 35px; /* Create space for the custom radio/checkbox */
+            cursor: pointer;
+            font-size: 1rem;
+            user-select: none;
+            display: flex; /* Use flexbox for alignment */
+            align-items: center;
+            min-height: 24px;
+        }
+
+        /* Hide the browser's default radio button */
+        .test-options input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Create a custom radio button */
+        .test-options .checkmark {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            height: 22px;
+            width: 22px;
+            background-color: #e5e7eb;
+            border: 1px solid #d1d5db;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        /* On mouse-over, add a grey background color */
+        .test-options label:hover input ~ .checkmark {
+            border-color: var(--gdv-primary);
+        }
+
+        /* When the radio button is checked, add a blue background */
+        .test-options input:checked ~ .checkmark {
+            background-color: var(--gdv-primary);
+            border-color: var(--gdv-primary);
+        }
+
+        /* Create the indicator (the dot/circle - hidden when not checked) */
+        .test-options .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        /* Show the indicator when checked */
+        .test-options input:checked ~ .checkmark:after {
+            display: block;
         }
     </style>
 </head>

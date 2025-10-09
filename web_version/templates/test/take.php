@@ -43,37 +43,6 @@ $page_title = 'Làm bài thi: ' . htmlspecialchars($test['title']);
 include APP_ROOT . '/templates/partials/header.php';
 ?>
 
-<style>
-    /* Custom styles for the test-taking page */
-    .test-question-card {
-        background: var(--gdv-white);
-        border: 1px solid var(--gdv-border);
-        border-radius: 0.75rem;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-    }
-    .test-question-card h4 {
-        font-size: 1.125rem;
-        margin-bottom: 1.5rem;
-    }
-    .test-options label {
-        display: block;
-        background: #F9FAFB;
-        border: 1px solid var(--gdv-border);
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        cursor: pointer;
-        transition: border-color 0.2s, background-color 0.2s;
-    }
-    .test-options label:hover {
-        background-color: #F3F4F6;
-    }
-    .test-options input[type="radio"] {
-        margin-right: 0.75rem;
-    }
-</style>
-
 <div id="lb-test-timer" data-time="<?php echo intval($test['time_limit']); ?>"></div>
 
 <div class="lb-take-test-container">
@@ -99,7 +68,11 @@ include APP_ROOT . '/templates/partials/header.php';
                 ?>
                     <div class="test-options">
                         <?php foreach ($options as $key => $value): ?>
-                            <label><input type="radio" name="answers[<?php echo $question['question_id']; ?>]" value="<?php echo $key; ?>"> <?php echo htmlspecialchars($value); ?></label>
+                            <label>
+                                <input type="radio" name="answers[<?php echo $question['question_id']; ?>]" value="<?php echo $key; ?>">
+                                <span class="checkmark"></span>
+                                <?php echo htmlspecialchars($value); ?>
+                            </label>
                         <?php endforeach; ?>
                     </div>
                 <?php else: // tu_luan ?>
