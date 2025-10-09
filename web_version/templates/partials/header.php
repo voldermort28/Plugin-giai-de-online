@@ -122,9 +122,9 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             opacity: 0;
             visibility: hidden;
             transform: translateY(10px);
-            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
-        .gdv-nav-item.dropdown.is-open > .gdv-dropdown-menu {
+        .gdv-nav-item.dropdown:hover > .gdv-dropdown-menu {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
@@ -173,12 +173,14 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
                 border: 1px solid var(--gdv-border);
                 border-top: none;
                 border-radius: 0 0 0 8px;
-                transform: translateY(-150%);
-                transition: transform 0.3s ease-in-out;
+                transform: translateY(-10px); /* Hiệu ứng trượt xuống nhẹ nhàng hơn */
+                opacity: 0;
+                visibility: hidden;
+                transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
                 z-index: 1005;
                 gap: 5px;
             }
-            .gdv-nav.is-active { transform: translateY(0); }
+            .gdv-nav.is-active { transform: translateY(0); opacity: 1; visibility: visible; }
             .gdv-nav a { width: 100%; box-sizing: border-box; }
             
             /* Đổi màu chữ menu về màu tối trên mobile vì nền trắng */
@@ -424,25 +426,84 @@ document.addEventListener('DOMContentLoaded', function () {
             nav.classList.toggle('is-active');
             this.setAttribute('aria-expanded', !isExpanded);
         });
-
-        // Dropdown logic
-        document.querySelectorAll('.gdv-nav .dropdown-toggle').forEach(function (toggle) {
-            toggle.addEventListener('click', function (e) {
-                e.preventDefault();
-                let dropdown = this.closest('.dropdown');
-                
-                // Close other open dropdowns
-                document.querySelectorAll('.gdv-nav .dropdown.is-open').forEach(function(openDropdown) {
-                    if (openDropdown !== dropdown) {
-                        openDropdown.classList.remove('is-open');
-                    }
-                });
-
-                dropdown.classList.toggle('is-open');
-            });
-        });
     }
 });
 </script>
+
+<!-- Custom Modal Popup -->
+<div id="gdv-custom-modal-overlay" style="display: none;">
+    <div id="gdv-custom-modal">
+        <div id="gdv-modal-icon">
+            <!-- Icon will be inserted by JS -->
+        </div>
+        <h3 id="gdv-modal-title">Tiêu đề</h3>
+        <p id="gdv-modal-message">Nội dung thông báo.</p>
+        <div id="gdv-modal-actions">
+            <button id="gdv-modal-cancel" class="gdv-button secondary">Hủy</button>
+            <button id="gdv-modal-confirm" class="gdv-button">Đồng ý</button>
+        </div>
+    </div>
+</div>
+<style>
+    #gdv-custom-modal-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    #gdv-custom-modal-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    #gdv-custom-modal {
+        background: var(--gdv-white);
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        width: 90%;
+        max-width: 450px;
+        text-align: center;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+    }
+    #gdv-custom-modal-overlay.visible #gdv-custom-modal {
+        transform: scale(1);
+    }
+    #gdv-modal-icon { margin-bottom: 15px; }
+    #gdv-modal-icon svg { width: 50px; height: 50px; }
+    #gdv-modal-title {
+        font-size: 1.5rem;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: var(--gdv-text);
+    }
+    #gdv-modal-message {
+        color: var(--gdv-text-secondary);
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    #gdv-modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+    #gdv-modal-actions .gdv-button {
+        min-width: 120px;
+    }
+    #gdv-modal-confirm.danger {
+        background-color: var(--gdv-danger);
+    }
+    #gdv-modal-confirm.danger:hover {
+        background-color: #B91C1C;
+    }
+</style>
 
 <!-- Main content of the page will be rendered after this -->
