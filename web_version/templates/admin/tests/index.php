@@ -195,22 +195,23 @@ include APP_ROOT . '/templates/partials/header.php';
                         <td><strong><?php echo htmlspecialchars($test['title']); ?></strong></td>
                         <td><?php echo htmlspecialchars($test['contest_name'] ?? '—'); ?></td>
                         <td>
-                            <?php if (!$is_used): // Chỉ cho phép sửa khi đề chưa được sử dụng ?>
-                                <a href="/grader/tests/edit?id=<?php echo $test['test_id']; ?>" class="gdv-action-link">Sửa</a>
-                            <?php else: ?>
-                                <span class="gdv-action-link" style="color: var(--gdv-text-secondary); cursor: not-allowed;" title="Không thể sửa đề đã được sử dụng. Hãy mở lại đề nếu muốn sửa.">Sửa</span>
-                                <form method="POST" action="/grader/tests" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn MỞ LẠI bài kiểm tra này? Hành động này sẽ XÓA bài làm hiện tại của thí sinh.');">
+                            <div class="gdv-action-buttons">
+                                <?php if (!$is_used): ?>
+                                    <a href="/grader/tests/edit?id=<?php echo $test['test_id']; ?>" class="gdv-button small secondary" title="Sửa đề thi">Sửa</a>
+                                <?php else: ?>
+                                    <form method="POST" action="/grader/tests" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn MỞ LẠI bài kiểm tra này? Hành động này sẽ XÓA bài làm hiện tại của thí sinh.');">
+                                        <?php csrf_field(); ?>
+                                        <input type="hidden" name="action" value="reopen_test">
+                                        <input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
+                                        <button type="submit" class="gdv-button small" style="background-color: var(--gdv-success);" title="Mở lại đề thi">Mở lại</button>
+                                    </form>
+                                <?php endif; ?>
+                                <form method="POST" action="/grader/tests" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài kiểm tra này?');">
                                     <?php csrf_field(); ?>
-                                    <input type="hidden" name="action" value="reopen_test">
-                                    <input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
-                                    <button type="submit" class="gdv-action-link" style="border:none; background:none; cursor:pointer; color: var(--gdv-success);">Mở lại</button>
+                                    <input type="hidden" name="action" value="delete_test"><input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
+                                    <button type="submit" class="gdv-button small danger" title="Xóa đề thi">Xóa</button>
                                 </form>
-                            <?php endif; ?>
-                            <form method="POST" action="/grader/tests" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài kiểm tra này?');">
-                                <?php csrf_field(); ?>
-                                <input type="hidden" name="action" value="delete_test"><input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
-                                <button type="submit" class="gdv-action-link" style="border:none; background:none; cursor:pointer; color: #dc3545;">Xóa</button>
-                            </form>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -157,15 +157,17 @@ include APP_ROOT . '/templates/partials/header.php';
                         <td><span class="gdv-status <?php echo htmlspecialchars($question['type']); ?>"><?php echo htmlspecialchars($display_type); ?></span></td>
                         <td><?php echo date('d/m/Y', strtotime($question['created_at'])); ?></td>
                         <td>
-                            <a href="/admin/questions/edit?id=<?php echo $question['question_id']; ?>" class="gdv-action-link">Sửa</a>
-                            <?php if ($usage_count > 0): ?>
-                                <a href="#" class="gdv-action-link view-usage" data-question-content="<?php echo htmlspecialchars(mb_substr($question['content'], 0, 80)); ?>..." data-tests='<?php echo json_encode($used_in_tests); ?>' style="margin-left: 1rem;">Sử dụng (<?php echo $usage_count; ?>)</a>
-                            <?php endif; ?>
-                            <form method="POST" action="/admin/questions" style="display:inline-block; margin-left: 1rem;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này?');">
-                                <?php csrf_field(); ?>
-                                <input type="hidden" name="action" value="delete_question"><input type="hidden" name="question_id" value="<?php echo $question['question_id']; ?>">
-                                <button type="submit" class="gdv-action-link" style="border:none; background:none; cursor:pointer; color: #dc3545;">Xóa</button>
-                            </form>
+                            <div class="gdv-action-buttons">
+                                <a href="/admin/questions/edit?id=<?php echo $question['question_id']; ?>" class="gdv-button small secondary">Sửa</a>
+                                <?php if ($usage_count > 0): ?>
+                                    <a href="#" class="gdv-button small secondary view-usage" data-question-content="<?php echo htmlspecialchars(mb_substr($question['content'], 0, 80)); ?>..." data-tests='<?php echo json_encode($used_in_tests); ?>'>Sử dụng (<?php echo $usage_count; ?>)</a>
+                                <?php endif; ?>
+                                <form method="POST" action="/admin/questions" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này?');">
+                                    <?php csrf_field(); ?>
+                                    <input type="hidden" name="action" value="delete_question"><input type="hidden" name="question_id" value="<?php echo $question['question_id']; ?>">
+                                    <button type="submit" class="gdv-button small danger">Xóa</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>

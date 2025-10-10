@@ -63,7 +63,9 @@ if (!empty($graded_submission_ids)) {
                         </a>
                     </td>
                     <td><?php echo date('d/m/Y, H:i', strtotime($sub['submission_time'])); ?></td>
-                    <td><a href="/grader/grade?submission_id=<?php echo $sub['submission_id']; ?>" class="gdv-action-link"><strong>Chấm bài</strong></a></td>
+                    <td>
+                        <a href="/grader/grade?submission_id=<?php echo $sub['submission_id']; ?>" class="gdv-button small">Chấm bài</a>
+                    </td>
                 </tr>
             <?php endforeach; endif; ?>
         </tbody>
@@ -77,8 +79,8 @@ if (!empty($graded_submission_ids)) {
             <tr>
                 <th>Bài thi</th>
                 <th>Thí sinh</th>
-                <th>Thời gian nộp</th>
                 <th>Điểm số</th>
+                <th>Thời gian nộp</th>
                 <th>Hành động</th>
             </tr>
         </thead>
@@ -95,10 +97,13 @@ if (!empty($graded_submission_ids)) {
                             <strong><?php echo htmlspecialchars($sub['contestant_name']); ?></strong>
                         </a>
                     </td>
-                    <td><?php echo date('d/m/Y, H:i', strtotime($sub['submission_time'])); ?></td>
                     <td><strong><?php echo intval($sub['score']); ?>/<?php echo $total_questions; ?></strong></td>
+                    <td><?php echo date('d/m/Y, H:i', strtotime($sub['submission_time'])); ?></td>
+                    
                     <td>
-                        <a href="/grader/grade?submission_id=<?php echo $sub['submission_id']; ?>&view_mode=regrade" class="gdv-action-link">Chấm lại</a>
+                        <div class="gdv-action-buttons">
+                            <a href="/grader/grade?submission_id=<?php echo $sub['submission_id']; ?>&view_mode=review" class="gdv-button small secondary">Xem lại</a>
+                        </div>
                     </td>
                 </tr>
             <?php endforeach; endif; ?>

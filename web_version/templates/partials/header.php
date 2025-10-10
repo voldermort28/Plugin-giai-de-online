@@ -17,9 +17,16 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             --gdv-text-secondary: #6B7280; --gdv-text-light: #D1D5DB; --gdv-danger: #DC2626; --gdv-success: #16A34A;
             --gdv-success-bg: #F0FDF4; --gdv-error-bg: #FEF2F2; --gdv-warning-bg: #FFFBEB;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--gdv-background); color: var(--gdv-text); line-height: 1.6; }
-        main.gdv-container { min-height: calc(100vh - 180px); /* Push footer down */ }
-        .gdv-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; color: var(--gdv-text); line-height: 1.6;
+            background: linear-gradient(170deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+        .site-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main.gdv-container { flex-grow: 1; max-width: 1200px; margin: 0 auto; padding: 20px; width: 100%; box-sizing: border-box; }
         
         /* Typography */
         h1, h2, h3, h4, h5, h6 { color: var(--gdv-text); margin-top: 0; margin-bottom: 0.5em; font-weight: 700; }
@@ -32,16 +39,24 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-card {
             background: var(--gdv-white);
             border: 1px solid var(--gdv-border);
+            border-top: 4px solid var(--gdv-primary);
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             padding: 40px;
             margin: 40px auto; /* Center the card */
+            animation: fadeInSlideUp 0.5s ease-out forwards;
         }
+        @keyframes fadeInSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .input, select, textarea { 
             width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--gdv-border); 
             border-radius: 8px; box-sizing: border-box; background-color: var(--gdv-white);
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
         }
+        .input:hover, select:hover, textarea:hover { background-color: #f9fafb; }
         .input:focus, select:focus, textarea:focus {
             outline: none; border-color: var(--gdv-primary);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
@@ -53,19 +68,37 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             background-color: var(--gdv-primary); color: var(--gdv-white); border: 1px solid transparent; 
             padding: 0.625rem 1.25rem; border-radius: 8px; cursor: pointer; text-decoration: none; 
             display: inline-block; font-size: 0.875rem; font-weight: 500;
-            transition: background-color 0.2s, transform 0.1s;
+            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
         }
-        .gdv-button:hover { background-color: var(--gdv-primary-dark); }
+        .gdv-button:hover { 
+            background-color: var(--gdv-primary-dark); 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
         .gdv-button.secondary {
-            background-color: #F3F4F6; color: var(--gdv-text); border-color: transparent;
+            background-color: var(--gdv-white); color: var(--gdv-text); border-color: var(--gdv-border);
         }
-        .gdv-button.secondary:hover { background-color: #F9FAFB; }
+        .gdv-button.secondary:hover { background-color: #f9fafb; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .gdv-button.danger {
             background-color: var(--gdv-danger); border-color: var(--gdv-danger);
         }
         .gdv-button.danger:hover { background-color: #D92D20; }
 
         /* Action Links */
+        .gdv-action-buttons { display: flex; gap: 8px; }
+        .gdv-button.small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8rem;
+        }
+        .gdv-button.icon {
+            padding: 0.5rem;
+            line-height: 1;
+        }
+        .gdv-button svg {
+            width: 1.1em;
+            height: 1.1em;
+            vertical-align: -0.15em;
+        }
         .gdv-action-link { color: var(--gdv-primary); text-decoration: none; font-weight: 500; }
         .gdv-action-link:hover { text-decoration: underline; }
         .gdv-action-link.danger { color: var(--gdv-danger); }
@@ -74,7 +107,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         .gdv-main-header {
             background-color: #1d1d1d;
             padding: 0 20px;
-            border-bottom: 1px solid var(--gdv-border);
+            /* border-bottom: 1px solid var(--gdv-border); */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -282,7 +315,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
 
         /* New Page Banner */
         .gdv-page-banner {
-            background-image: url('https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=2070&auto=format&fit=crop');
+            background-image: url('https://laboon.vn/wp-content/uploads/2023/10/head-banner1.jpg');
             background-size: cover;
             background-position: center;
             padding: 4rem 1.5rem;
@@ -295,7 +328,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(2px);
         }
         .gdv-page-banner .banner-content {
@@ -311,54 +344,39 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
 
         /* New Footer */
         .gdv-main-footer-v2 {
-            background-color: #1d1d1d;
+            background-image: url('https://laboon.vn/wp-content/uploads/2023/10/bg-footer-home1-copy-1-scaled.webp');
+            background-size: cover;
+            background-position: top center;
             color: var(--gdv-text-light);
-            padding: 50px 20px;
+            padding: 40px 20px;
             font-size: 14px;
+            text-align: center;
+            position: relative;
         }
-        .gdv-main-footer-v2 .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
+        .gdv-main-footer-v2::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: -1;
         }
-        .gdv-main-footer-v2 .footer-column h4 {
-            color: var(--gdv-white);
+        .gdv-main-footer-v2 .footer-logo-container {
             margin-bottom: 20px;
-            font-size: 16px;
-            text-transform: uppercase;
+            position: relative; z-index: 1;
         }
-        .gdv-main-footer-v2 .footer-column p, .gdv-main-footer-v2 .footer-column a {
-            color: var(--gdv-text-light);
-            text-decoration: none;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .gdv-main-footer-v2 .footer-column a:hover {
-            color: var(--gdv-white);
-            text-decoration: underline;
+        .gdv-main-footer-v2 .footer-logo-container img {
+            max-width: 200px;
+            height: auto;
         }
         .gdv-main-footer-v2 .footer-bottom {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #374151;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #374151; /* Giữ lại đường kẻ mờ */
             font-size: 13px;
             color: var(--gdv-text-secondary);
+            position: relative; z-index: 1;
         }
 
-        .gdv-filter-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: var(--gdv-white);
-            border-radius: 12px;
-            border: 1px solid var(--gdv-border);
-            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        }
     </style>
     <style>
         /* ==========================================================================
@@ -459,6 +477,8 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
     </style>
 </head>
 <body>
+
+<div class="site-wrapper">
 
 <header class="gdv-main-header">
     <a href="/" class="gdv-brand">
