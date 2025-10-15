@@ -13,7 +13,7 @@ $view_mode = $_GET['view_mode'] ?? 'regrade';
 if ($view_mode !== 'review' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'grade_submission') {
     $submitted_is_correct = $_POST['is_correct'] ?? [];
     $final_score = 0;
-
+    validate_csrf_token();
     // Lấy tất cả các câu trả lời của bài làm này
     $all_answers_in_db = $db->fetchAll("SELECT answer_id, question_id FROM answers WHERE submission_id = ?", [$submission_id]);
 
@@ -21,21 +21,14 @@ if ($view_mode !== 'review' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_
         $answer_id = $db_answer['answer_id'];
         $question_id = $db_answer['question_id'];
         
-        // Sửa lỗi: Thay thế fetchColumn() bằng fetch()
         $question_type_row = $db->fetch("SELECT type FROM questions WHERE question_id = ?", [$question_id]);
         $question_type = $question_type_row ? $question_type_row['type'] : null;
 
         $is_correct_status = 0; // Mặc định là sai
         if ($question_type === 'trac_nghiem') {
-            // Sửa lỗi: Khi chấm lại, giá trị is_correct của câu trắc nghiệm được gửi lên từ form
-            // thông qua một trường ẩn. Điều này đảm bảo điểm số được cập nhật đúng.
-            if (isset($submitted_is_correct[$answer_id])) {
-                $is_correct_status = ($submitted_is_correct[$answer_id] == '1') ? 1 : 0;
-            } else {
-                // Fallback phòng trường hợp dữ liệu không được gửi lên
-                $is_correct_row = $db->fetch("SELECT is_correct FROM answers WHERE answer_id = ?", [$answer_id]);
-                $is_correct_status = $is_correct_row ? $is_correct_row['is_correct'] : 0;
-            }
+            // Đối với câu trắc nghiệm, giá trị is_correct được gửi lên từ một trường ẩn
+            // đã được tính toán lại ở phía client để đảm bảo đúng với đáp án mới nhất.
+            $is_correct_status = (isset($submitted_is_correct[$answer_id]) && $submitted_is_correct[$answer_id] == '1') ? 1 : 0;
         } else {
             // Đối với tự luận, lấy từ form
             $is_correct_status = (isset($submitted_is_correct[$answer_id]) && $submitted_is_correct[$answer_id] == '1') ? 1 : 0;
@@ -114,6 +107,7 @@ include APP_ROOT . '/templates/partials/header.php';
 <?php if ($view_mode !== 'review'): // Chỉ hiển thị form nếu không phải chế độ xem lại ?>
     <form method="POST" action="/grader/grade?submission_id=<?php echo $submission_id; ?>">
         <input type="hidden" name="action" value="grade_submission">
+        <?php csrf_field(); ?>
 <?php endif; ?>
 
     <?php foreach ($answers as $index => $answer): ?>

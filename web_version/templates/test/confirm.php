@@ -26,12 +26,12 @@ if (!$test || $existing_submission) {
 }
 
 // Kiểm tra số điện thoại
-$contestant = $db->fetch(
-    "SELECT contestant_name FROM submissions WHERE contestant_phone = ? ORDER BY submission_id DESC LIMIT 1",
+$contestant_row = $db->fetch(
+    "SELECT contestant_name FROM submissions WHERE contestant_phone = ? AND contestant_name IS NOT NULL AND contestant_name != '' ORDER BY submission_id DESC LIMIT 1",
     [$phone_number]
 );
 
-$submitter_name = $contestant['contestant_name'] ?? '';
+$submitter_name = $contestant_row['contestant_name'] ?? '';
 $is_new_contestant = empty($submitter_name);
 
 $page_title = 'Xác nhận thông tin';
@@ -54,9 +54,11 @@ include APP_ROOT . '/templates/partials/header.php';
         </div>
         <div class="form-group">
             <label for="submitter_name">Tên của bạn:</label>
-            <input type="text" name="submitter_name" id="submitter_name" class="input" value="<?php echo htmlspecialchars($submitter_name); ?>" <?php echo !$is_new_contestant ? 'readonly' : 'required'; ?>>
+            <input type="text" name="submitter_name" id="submitter_name" class="input" value="<?php echo htmlspecialchars($submitter_name); ?>" required>
             <?php if (!$is_new_contestant): ?>
-                <p style="color: var(--gdv-primary); font-size: 0.9em; margin-top: 5px;">Chào mừng bạn trở lại! Thông tin của bạn đã được tải.</p>
+                <p style="color: var(--gdv-primary); font-size: 0.9em; margin-top: 5px;">Chào mừng bạn trở lại! Vui lòng xác nhận lại tên của bạn.</p>
+            <?php else: ?>
+                <p style="color: var(--gdv-text-secondary); font-size: 0.9em; margin-top: 5px;">Đây là lần đầu bạn tham gia? Vui lòng nhập họ và tên đầy đủ.</p>
             <?php endif; ?>
         </div>
         <div class="form-group"><button type="submit" class="gdv-button" style="width: 100%;">Bắt đầu làm bài</button></div>

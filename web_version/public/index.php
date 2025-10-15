@@ -1,6 +1,20 @@
 <?php
 // web_version/public/index.php
 
+// --- Cấu hình thời gian tồn tại của Session ---
+// Đặt thời gian sống cho cookie session là 30 ngày (tính bằng giây)
+$cookie_lifetime = 30 * 24 * 60 * 60; // 30 ngày
+
+session_set_cookie_params([
+    'lifetime' => $cookie_lifetime,
+    'path' => '/',
+    'domain' => $_SERVER['HTTP_HOST'],
+    'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on', // Chỉ gửi cookie qua HTTPS
+    'httponly' => true, // Ngăn truy cập cookie từ JavaScript
+    'samesite' => 'Lax' // Giảm nguy cơ tấn công CSRF
+]);
+
+// Bắt đầu session sau khi đã cấu hình
 session_start();
 
 // Định nghĩa đường dẫn gốc của ứng dụng

@@ -154,10 +154,10 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             z-index: 1010;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(10px);
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translateY(5px);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
         }
-        .gdv-nav-item.dropdown:hover > .gdv-dropdown-menu {
+        .gdv-nav-item.dropdown.is-open > .gdv-dropdown-menu {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
@@ -578,6 +578,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 hamburger.classList.remove('is-active');
                 hamburger.setAttribute('aria-expanded', 'false');
             }
+        });
+
+        // Dropdown click handler
+        document.querySelectorAll('.gdv-nav-item.dropdown > .dropdown-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function(event) {
+                event.preventDefault();
+                const dropdown = this.parentElement;
+                
+                // Close other open dropdowns
+                document.querySelectorAll('.gdv-nav-item.dropdown.is-open').forEach(openDropdown => {
+                    if (openDropdown !== dropdown) {
+                        openDropdown.classList.remove('is-open');
+                    }
+                });
+
+                dropdown.classList.toggle('is-open');
+            });
         });
     }
 });
