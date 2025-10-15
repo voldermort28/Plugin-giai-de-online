@@ -100,7 +100,7 @@ include APP_ROOT . '/templates/partials/header.php';
 
 <div class="gdv-card" style="max-width: 900px;">
     <p><strong>Bài thi:</strong> <?php echo htmlspecialchars($submission['test_title']); ?></p>
-    <p><strong>Thí sinh:</strong> <?php echo htmlspecialchars($submission['contestant_name']); ?></p>
+    <p><strong>Nhân viên:</strong> <?php echo htmlspecialchars($submission['contestant_name']); ?></p>
     <p><strong>Thời gian nộp:</strong> <?php echo date('d/m/Y, H:i', strtotime($submission['submission_time'])); ?></p>
 </div>
 
@@ -115,7 +115,7 @@ include APP_ROOT . '/templates/partials/header.php';
             <h4>Câu <?php echo $index + 1; ?>: <?php echo nl2br(htmlspecialchars($answer['content'])); ?></h4>
 
             <div class="answer-block student-answer">
-                <strong>Câu trả lời của thí sinh:</strong>
+                <strong>Câu trả lời của nhân viên:</strong>
                 <div>
                     <?php
                     if ($answer['type'] === 'trac_nghiem') {
@@ -131,15 +131,15 @@ include APP_ROOT . '/templates/partials/header.php';
 
             <?php if ($answer['type'] === 'trac_nghiem'): 
                 // Sửa lỗi: Luôn so sánh lại với đáp án mới nhất, không phụ thuộc vào DB
-                // Điều này đảm bảo khi admin sửa đáp án, kết quả chấm lại sẽ được cập nhật.
+                // Điều này đảm bảo khi admin sửa đáp án, kết quả chấm lại sẽ được cập nhật
                 $clean_user_answer = preg_replace('/[^A-Z]/', '', strtoupper($answer['user_answer']));
                 $clean_correct_answer = preg_replace('/[^A-Z]/', '', strtoupper($answer['model_answer']));
                 $is_correct = (!empty($clean_user_answer) && $clean_user_answer === $clean_correct_answer);
 
             ?>
                 <div class="answer-block model-answer <?php echo $is_correct ? 'correct' : 'incorrect'; ?>">
-                    <strong>Đáp án đúng:</strong> <?php echo htmlspecialchars($answer['model_answer']); ?>
-                    - <span style="font-weight: 500;"><?php echo $is_correct ? 'Thí sinh trả lời Đúng' : 'Thí sinh trả lời Sai'; ?></span>
+                    <strong>Đáp án đúng:</strong> <?php echo htmlspecialchars($answer['model_answer']); ?> -
+                    <span style="font-weight: 500;"><?php echo $is_correct ? 'Nhân viên trả lời Đúng' : 'Nhân viên trả lời Sai'; ?></span>
                 </div>
                 <?php if ($view_mode !== 'review'): ?>
                     <!-- Trong chế độ chấm, giá trị is_correct được gửi đi một cách ẩn -->
@@ -159,10 +159,10 @@ include APP_ROOT . '/templates/partials/header.php';
                     </div>
                 <?php else: 
                     // Trong chế độ xem lại, chỉ hiển thị kết quả
-                    $result_text = '<span class="result-incorrect">Thí sinh trả lời Sai</span>';
+                    $result_text = '<span class="result-incorrect">Nhân viên trả lời Sai</span>';
                     $result_box_class = 'incorrect';
                     if ($answer['is_correct'] == 1) {
-                        $result_text = '<span class="result-correct">Thí sinh trả lời Đúng</span>';
+                        $result_text = '<span class="result-correct">Nhân viên trả lời Đúng</span>';
                         $result_box_class = 'correct';
                     }
                 ?>

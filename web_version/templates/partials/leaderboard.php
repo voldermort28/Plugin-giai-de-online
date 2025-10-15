@@ -88,7 +88,7 @@ if (isset($_SESSION['contestant_phone'])):
         $chart_scores = array_column($chart_data, 'average_score');
         ?>
         <div class="gdv-card" style="margin-bottom: 20px;">
-            <h3 style="margin-top: 0;">Top 10 Thí sinh</h3>
+            <h3 style="margin-top: 0;">Top 10 Nhân viên</h3>
             <div style="position: relative; height:400px;">
                 <canvas id="publicLeaderboardChart"></canvas>
             </div>
@@ -124,7 +124,7 @@ if (isset($_SESSION['contestant_phone'])):
                 <thead>
                     <tr>
                         <th style="width: 80px; text-align: center;">Hạng</th>
-                        <th>Tên Thí Sinh</th>
+                        <th>Tên Nhân viên</th>
                         <th style="text-align: center;">Số bài đã làm</th>
                         <th style="text-align: right;">Điểm Trung Bình</th>
                     </tr>

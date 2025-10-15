@@ -65,7 +65,7 @@ include APP_ROOT . '/templates/partials/header.php';
     $chart_scores = array_column($chart_data, 'average_score');
     ?>
     <div class="gdv-card" style="margin-bottom: 20px;">
-        <h3 style="margin-top: 0;">Top 10 Thí sinh</h3>
+        <h3 style="margin-top: 0;">Top 10 Nhân viên</h3>
         <div style="position: relative; height:400px;">
             <canvas id="leaderboardChart"></canvas>
         </div>
@@ -101,7 +101,7 @@ include APP_ROOT . '/templates/partials/header.php';
             <thead>
                 <tr>
                     <th style="width: 80px; text-align: center;">Hạng</th>
-                    <th>Tên Thí Sinh</th>
+                    <th>Tên Nhân viên</th>
                     <th style="text-align: center;">Số bài đã làm</th>
                     <th style="text-align: right;">Điểm Trung Bình</th>
                 </tr>
@@ -230,7 +230,7 @@ if (isset($_SESSION['contestant_phone'])):
                 <thead>
                     <tr>
                         <th style="width: 80px; text-align: center;">Hạng</th>
-                        <th>Tên Thí Sinh</th>
+                        <th>Tên Nhân Viên</th>
                         <th style="text-align: center;">Số bài đã làm</th>
                         <th style="text-align: right;">Điểm Trung Bình</th>
                     </tr>
@@ -330,7 +330,7 @@ Cuối cùng, chúng ta thêm các route mới và cập nhật menu điều hư
                  <a href="/admin/questions" class="<?php echo in_array($current_uri, ['/admin/questions', '/admin/questions/edit']) ? 'active' : ''; ?>">Câu Hỏi</a>
                  <a href="/admin/users" class="<?php echo ($current_uri == '/admin/users') ? 'active' : ''; ?>">Quản lý User</a>
 +                <a href="/admin/leaderboard" class="<?php echo ($current_uri == '/admin/leaderboard') ? 'active' : ''; ?>">BXH Admin</a>
-                 <a href="/admin/contestants" class="<?php echo in_array($current_uri, ['/admin/contestants', '/admin/contestants/view']) ? 'active' : ''; ?>">Thí Sinh</a>
+                 <a href="/admin/contestants" class="<?php echo in_array($current_uri, ['/admin/contestants', '/admin/contestants/view']) ? 'active' : ''; ?>">Nhân Viên</a>
                  <a href="/admin/import" class="<?php echo ($current_uri == '/admin/import') ? 'active' : ''; ?>">Import Câu Hỏi</a>
              <?php endif; ?>
              <a href="/logout">Đăng xuất</a>
@@ -342,7 +342,7 @@ Cuối cùng, chúng ta thêm các route mới và cập nhật menu điều hư
 
 ```
 
-Sau khi áp dụng các thay đổi này, bạn sẽ có hai trang bảng xếp hạng hoàn chỉnh, một cho admin và một cho thí sinh, với đầy đủ chức năng như phiên bản plugin.
+Sau khi áp dụng các thay đổi này, bạn sẽ có hai trang bảng xếp hạng hoàn chỉnh, một cho admin và một cho nhân viên, với đầy đủ chức năng như phiên bản plugin.
 
 <!--
 [PROMPT_SUGGESTION]Gom các mục menu quản lý vào một dropdown menu cho gọn gàng hơn.[/PROMPT_SUGGESTION]

@@ -17,7 +17,7 @@ jQuery(document).ready(function($) {
     toggleQuestionFields(); // Chạy lần đầu khi tải trang
     questionTypeSelect.on('change', toggleQuestionFields);
 
-    // --- FRONTEND JS: Form nhập thông tin thí sinh (AJAX check SĐT) ---
+    // --- FRONTEND JS: Form nhập thông tin nhân viên (AJAX check SĐT) ---
     const phoneInput = $('#phone_number');
     const nameInput = $('#submitter_name');
     const phoneCheckMsg = $('#phone_check_msg');

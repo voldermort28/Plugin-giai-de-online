@@ -61,7 +61,7 @@ include APP_ROOT . '/templates/partials/header.php';
     $chart_scores = array_column($chart_data, 'average_score');
     ?>
     <div class="gdv-card" style="margin-bottom: 20px;">
-        <h3 style="margin-top: 0;">Top 10 Thí sinh</h3>
+        <h3 style="margin-top: 0;">Top 10 Nhân Viên</h3>
         <div style="position: relative; height:400px;">
             <canvas id="leaderboardChart"></canvas>
         </div>
@@ -97,7 +97,7 @@ include APP_ROOT . '/templates/partials/header.php';
             <thead>
                 <tr>
                     <th style="width: 80px; text-align: center;">Hạng</th>
-                    <th>Tên Thí Sinh</th>
+                    <th>Tên Nhân Viên</th>
                     <th style="text-align: center;">Số bài đã làm</th>
                     <th style="text-align: right;">Điểm Trung Bình</th>
                 </tr>

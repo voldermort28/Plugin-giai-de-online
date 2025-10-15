@@ -46,7 +46,7 @@ if (!empty($graded_submission_ids)) {
         <thead>
             <tr>
                 <th>Bài thi</th>
-                <th>Thí sinh</th>
+                <th>Nhân viên</th>
                 <th>Thời gian nộp</th>
                 <th>Hành động</th>
             </tr>
@@ -78,7 +78,7 @@ if (!empty($graded_submission_ids)) {
         <thead>
             <tr>
                 <th>Bài thi</th>
-                <th>Thí sinh</th>
+                <th>Nhân viên</th>
                 <th>Điểm số</th>
                 <th>Thời gian nộp</th>
                 <th>Hành động</th>

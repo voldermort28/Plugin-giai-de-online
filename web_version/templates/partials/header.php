@@ -493,7 +493,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
                 <a href="/grader/tests" class="<?php echo in_array($current_uri, ['/grader/tests', '/grader/tests/edit', '/admin/tests/bulk-generate']) ? 'active' : ''; ?>">Đề thi</a>
             </div>
             <div class="gdv-nav-item">
-                <a href="/admin/contestants" class="<?php echo in_array($current_uri, ['/admin/contestants', '/admin/contestants/view']) ? 'active' : ''; ?>">Thí sinh</a>
+                <a href="/admin/contestants" class="<?php echo in_array($current_uri, ['/admin/contestants', '/admin/contestants/view']) ? 'active' : ''; ?>">Nhân Viên</a>
             </div>
 
             <?php if ($auth->hasRole('admin')): 

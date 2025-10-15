@@ -1,21 +1,21 @@
 <?php
 // web_version/templates/admin/contestants/view.php
 
-// Xử lý cập nhật thông tin thí sinh (cả tên và SĐT)
+// Xử lý cập nhật thông tin nhân viên (cả tên và SĐT)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_contestant') {
     $original_phone = $_POST['original_phone_number'] ?? '';
     $new_phone = trim($_POST['contestant_phone'] ?? '');
     $new_name = trim($_POST['contestant_name'] ?? '');
 
     if (!empty($original_phone) && !empty($new_name) && !empty($new_phone)) {
-        // Cập nhật tên và SĐT cho tất cả các bài làm có cùng SĐT gốc
+        // Cập nhật tên và SĐT cho tất cả các bài làm có cùng SĐT gốc (để đồng bộ tên)
         $db->update(
             'submissions', 
             ['contestant_name' => $new_name, 'contestant_phone' => $new_phone], 
             'contestant_phone = ?', 
             [$original_phone]
         );
-        set_message('success', 'Đã cập nhật thông tin thí sinh thành công.');
+        set_message('success', 'Đã cập nhật thông tin nhân viên thành công.');
         // Chuyển hướng đến trang xem chi tiết với SĐT mới
         redirect('/admin/contestants/view?phone=' . urlencode($new_phone));
     } else {
@@ -28,19 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 $phone_number = $_GET['phone'] ?? null;
 if (!$phone_number) {
-    set_message('error', 'Số điện thoại thí sinh không hợp lệ.');
+    set_message('error', 'Số điện thoại nhân viên không hợp lệ.');
     redirect('/admin/contestants');
 }
 
-// Lấy tên thí sinh (từ bài nộp gần nhất để đảm bảo tên là mới nhất)
+// Lấy tên nhân viên (từ bài nộp gần nhất để đảm bảo tên là mới nhất)
 $contestant_name_row = $db->fetch("SELECT contestant_name FROM submissions WHERE contestant_phone = ? ORDER BY submission_id DESC LIMIT 1", [$phone_number]);
 if (!$contestant_name_row) {
-    set_message('error', 'Không tìm thấy thí sinh.');
+    set_message('error', 'Không tìm thấy nhân viên.');
     redirect('/admin/contestants');
 }
 $contestant_name = $contestant_name_row['contestant_name'];
 
-// Lấy danh sách các cuộc thi mà thí sinh đã tham gia
+// Lấy danh sách các cuộc thi mà nhân viên đã tham gia
 $contests = $db->fetchAll("
     SELECT DISTINCT t.contest_name
     FROM submissions s
@@ -66,7 +66,7 @@ if ($filter_contest) {
 }
 $score_stats = $db->fetch($score_stats_sql, $score_params);
 
-// Lấy danh sách bài làm của thí sinh
+// Lấy danh sách bài làm của nhân viên
 $submissions_sql = "
     SELECT s.submission_id, s.test_id, s.status, s.score, s.submission_time, t.title as test_title, s.contestant_name
     FROM submissions s
@@ -105,7 +105,7 @@ include APP_ROOT . '/templates/partials/header.php';
                 <input type="tel" name="contestant_phone" id="contestant_phone" class="input" value="<?php echo htmlspecialchars($phone_number); ?>" required>
             </div>
             <div class="form-group">
-                <label for="contestant_name">Tên thí sinh</label>
+                <label for="contestant_name">Tên nhân viên</label>
                 <input type="text" name="contestant_name" id="contestant_name" class="input" value="<?php echo htmlspecialchars($contestant_name); ?>" required>
             </div>
             <div class="form-group" style="text-align: right;">
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </thead>
         <tbody>
             <?php if (empty($submissions)): ?>
-                <tr><td colspan="5" style="text-align: center; padding: 20px;">Thí sinh này chưa làm bài thi nào.</td></tr>
+                <tr><td colspan="5" style="text-align: center; padding: 20px;">Nhân viên này chưa làm bài thi nào.</td></tr>
             <?php else: ?>
                 <?php foreach ($submissions as $sub):
                     // Chỉ hiển thị các bài đã được chấm

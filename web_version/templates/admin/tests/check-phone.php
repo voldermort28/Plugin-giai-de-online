@@ -21,17 +21,17 @@ if (empty($phone_number)) {
     exit;
 }
 
-// Truy vấn để tìm tên thí sinh từ lần nộp bài gần nhất có cùng số điện thoại.
-// Điều này đảm bảo lấy được tên mới nhất nếu thí sinh có thay đổi tên.
+// Truy vấn để tìm tên nhân viên từ lần nộp bài gần nhất có cùng số điện thoại.
+// Điều này đảm bảo lấy được tên mới nhất nếu nhân viên có thay đổi tên.
 $contestant = $db->fetch(
     "SELECT contestant_name FROM submissions WHERE contestant_phone = ? ORDER BY submission_id DESC LIMIT 1",
     [$phone_number]
 );
 
 if ($contestant) {
-    // Tìm thấy thí sinh
+    // Tìm thấy nhân viên
     echo json_encode(['success' => true, 'data' => ['display_name' => $contestant['contestant_name']]]);
 } else {
     // Không tìm thấy
-    echo json_encode(['success' => false, 'message' => 'Không tìm thấy thí sinh.']);
+    echo json_encode(['success' => false, 'message' => 'Không tìm thấy nhân viên.']);
 }

@@ -48,7 +48,7 @@ include APP_ROOT . '/templates/partials/header.php';
 <div class="lb-take-test-container">
     <div class="gdv-header">
         <h1><?php echo htmlspecialchars($test['title']); ?></h1>
-        <p class="gdv-description">Thí sinh: <?php echo htmlspecialchars($submitter_name); ?></p>
+        <p class="gdv-description">Nhân viên: <?php echo htmlspecialchars($submitter_name); ?></p>
     </div>
 
     <form id="test-submission-form">
