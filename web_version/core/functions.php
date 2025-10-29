@@ -1,54 +1,70 @@
 <?php
-// web_version/core/functions.php
+// core/functions.php
 
-function redirect($url, $status = 302) {
-    header("Location: " . $url, true, $status);
-    exit();
+// --- Các hàm tiện ích cơ bản (nếu chưa có) ---
+// Hàm đặt thông báo vào session
+if (!function_exists('set_message')) {
+    function set_message($type, $text) {
+        $_SESSION['message'] = ['type' => $type, 'text' => $text];
+    }
 }
 
-function set_message($type, $message) {
-    // Store a single message as an array containing its type and text.
-    $_SESSION['message'] = ['type' => $type, 'text' => $message];
+// Hàm kiểm tra có thông báo hay không
+if (!function_exists('has_message')) {
+    function has_message() {
+        return isset($_SESSION['message']);
+    }
 }
 
-function get_message() {
-    // Retrieve the single message and then clear it.
-    if (isset($_SESSION['message'])) {
-        $message = $_SESSION['message'];
+// Hàm lấy thông báo và xóa khỏi session
+if (!function_exists('get_message')) {
+    function get_message() {
+        $message = $_SESSION['message'] ?? null;
         unset($_SESSION['message']);
         return $message;
     }
-    return null;
 }
 
-function has_message() {
-    // Check if the single message exists.
-    return !empty($_SESSION['message']);
-}
-
-/**
- * Tạo và lưu trữ CSRF token trong session nếu chưa tồn tại.
- * @return string CSRF token.
- */
-function csrf_token() {
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// Hàm chuyển hướng trang
+if (!function_exists('redirect')) {
+    function redirect($path) {
+        header("Location: " . $path);
+        exit();
     }
-    return $_SESSION['csrf_token'];
 }
 
-/**
- * In ra một thẻ input hidden chứa CSRF token.
- */
-function csrf_field() {
-    echo '<input type="hidden" name="csrf_token" value="' . csrf_token() . '">';
+// --- Các hàm bảo vệ CSRF ---
+// Tạo token CSRF mới nếu chưa có trong session
+if (!function_exists('generate_csrf_token')) {
+    function generate_csrf_token() {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
 }
 
-/**
- * Xác thực CSRF token được gửi từ form.
- * @param string $token Token được gửi từ form.
- * @return bool True nếu hợp lệ, False nếu không.
- */
-function verify_csrf_token($token) {
-    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+// Xác minh token CSRF
+if (!function_exists('verify_csrf_token')) {
+    function verify_csrf_token($token) {
+        // Sử dụng hash_equals để ngăn chặn tấn công thời gian (timing attacks)
+        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    }
+}
+
+// Hiển thị trường ẩn chứa token CSRF trong form
+if (!function_exists('csrf_field')) {
+    function csrf_field() {
+        echo '<input type="hidden" name="csrf_token" value="' . generate_csrf_token() . '">';
+    }
+}
+
+// Hàm kiểm tra và xác thực token CSRF từ POST request
+if (!function_exists('validate_csrf_token')) {
+    function validate_csrf_token() {
+        if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+            set_message('error', 'Lỗi xác thực (CSRF token không hợp lệ). Vui lòng thử lại.');
+            redirect('/'); // Chuyển hướng về trang chủ hoặc trang an toàn
+        }
+    }
 }

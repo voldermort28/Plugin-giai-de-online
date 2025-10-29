@@ -58,18 +58,6 @@ $routes = [
     '/admin/import' => ['file' => APP_ROOT . '/templates/admin/import/index.php', 'auth' => true, 'role' => 'admin'],
 ];
 
-/**
- * Hàm render template và truyền các biến cần thiết vào.
- * Điều này giải quyết vấn đề scope của biến một cách triệt để.
- * @param string $file Đường dẫn đến file template.
- * @param array $data Các biến cần truyền vào, ví dụ ['db' => $db, 'auth' => $auth].
- */
-function render_template($file, $data = []) {
-    // Giải nén mảng thành các biến riêng lẻ (e.g., $data['db'] trở thành $db)
-    extract($data);
-    require_once $file;
-}
-
 // Xử lý route
 if (isset($routes[$request_uri])) {
     $route = $routes[$request_uri];
@@ -85,9 +73,8 @@ if (isset($routes[$request_uri])) {
             redirect('/');
         }
     }
-    // Sử dụng hàm render_template thay vì require_once trực tiếp
-    // Truyền các đối tượng cốt lõi vào mọi template
-    render_template($route['file'], ['db' => $db, 'auth' => $auth]);
+    // Nạp file template. Các biến như $db, $auth sẽ có sẵn trong scope này.
+    require_once $route['file'];
 } else {
     http_response_code(404);
     echo '<h1>404 Not Found</h1><p>Trang bạn tìm kiếm không tồn tại.</p>';

@@ -72,8 +72,8 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
         }
         .gdv-button:hover { 
             background-color: var(--gdv-primary-dark); 
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .gdv-button.secondary {
             background-color: var(--gdv-white); color: var(--gdv-text); border-color: var(--gdv-border);
@@ -189,7 +189,7 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
             .gdv-hamburger.is-active .bar:nth-child(2) { opacity: 0; }
             .gdv-hamburger.is-active .bar:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
 
-            .gdv-header {
+            .gdv-header { 
                 flex-wrap: wrap;
                 align-items: flex-start;
                 padding-bottom: 1rem;
@@ -230,19 +230,30 @@ $current_uri = strtok($_SERVER["REQUEST_URI"], '?');
                 overflow-x: auto; /* Cho phép cuộn ngang bảng */
             }
         }
-
-        /* Message/Notification Bar */
+ 
+        /* Message/Notification Bar */ 
         .gdv-message { padding: 1rem 1.25rem; margin: 20px 0; border-radius: 0.5rem; border: 1px solid transparent; }
         .gdv-message.success { background-color: var(--gdv-success-bg); border-color: #A7F3D0; color: #047857; }
         .gdv-message.error { background-color: var(--gdv-error-bg); border-color: #FECACA; color: #B91C1C; }
         .gdv-message.warning { background-color: var(--gdv-warning-bg); border-color: #FDE68A; color: #B45309; }
 
-        /* Table Styles */
-        .gdv-table-wrapper { background: var(--gdv-white); border: 1px solid var(--gdv-border); border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); overflow-x: auto; }
-        .gdv-table { width: 100%; border-collapse: collapse; }
-        .gdv-table th, .gdv-table td { padding: 0.75rem 1.5rem; text-align: left; border-bottom: 1px solid var(--gdv-border); }
-        .gdv-table thead th { background-color: #F9FAFB; color: var(--gdv-text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-        .gdv-table tbody tr:nth-child(even) { background-color: #F9FAFB; } /* Zebra-striping */
+        /* Table Styles - Nâng cấp giao diện */
+        .gdv-table-wrapper { 
+            background: var(--gdv-white); 
+            border: 1px solid var(--gdv-border); 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); 
+            overflow: hidden; /* Giúp bo góc hoạt động với bảng bên trong */
+        }
+        .gdv-table { width: 100%; border-collapse: collapse; border-spacing: 0; }
+        .gdv-table th, .gdv-table td { 
+            padding: 1rem 1.5rem; /* Tăng padding cho thoáng hơn */
+            text-align: left; 
+            border-bottom: 1px solid var(--gdv-border); 
+        }
+        .gdv-table thead th { background-color: #F9FAFB; color: var(--gdv-text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; border-bottom-width: 2px; }
+        .gdv-table tbody tr { transition: background-color 0.2s ease-in-out; }
+        .gdv-table tbody tr:hover { background-color: #F5F3FF; } /* Hiệu ứng hover màu tím nhạt */
         .gdv-table tbody tr:last-child td { border-bottom: none; }
         .gdv-table td strong { font-weight: 500; color: var(--gdv-text); }
         /* Rank colors */

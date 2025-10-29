@@ -73,12 +73,12 @@ include APP_ROOT . '/templates/partials/header.php';
 ?>
 
 <style>
-    .answer-block { margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--gdv-border); }
-    .answer-block strong { color: var(--gdv-text-secondary); }
+    .answer-block { margin-bottom: 1rem; padding: 1rem; border-radius: 8px; border: 1px solid var(--gdv-border); }
+    .answer-block strong { color: var(--gdv-text-secondary); font-size: 0.875rem; display: block; margin-bottom: 0.5rem; }
     .answer-block.student-answer { background-color: #F9FAFB; }
     .answer-block.model-answer.correct { background-color: var(--gdv-success-bg); border-color: #A7F3D0; }
     .answer-block.model-answer.incorrect { background-color: var(--gdv-error-bg); border-color: #FECACA; }
-    .grading-tickbox { margin-top: 1rem; padding: 1rem; background-color: #FEF3C7; border: 1px solid #FDE68A; border-radius: 0.5rem; }
+    .grading-tickbox { margin-top: 1rem; padding: 1rem; background-color: var(--gdv-warning-bg); border: 1px solid #FDE68A; border-radius: 8px; }
 </style>
 
 <div class="gdv-header">
