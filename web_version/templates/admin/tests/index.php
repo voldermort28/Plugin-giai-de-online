@@ -15,6 +15,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($action === 'delete_test') {
         $test_id_to_delete = $_POST['test_id'] ?? null;
         if ($test_id_to_delete) {
+            // Sửa lỗi: Xóa TẤT CẢ các bài làm và câu trả lời liên quan
+            $submissions = $db->fetchAll("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id_to_delete]);
+            if (!empty($submissions)) {
+                foreach ($submissions as $sub) {
+                    $db->delete('answers', 'submission_id = ?', [$sub['submission_id']]);
+                }
+                $db->delete('submissions', 'test_id = ?', [$test_id_to_delete]);
+            }
+            // Xóa các bảng liên kết và đề thi
             $db->delete('test_questions', 'test_id = ?', [$test_id_to_delete]);
             $db->delete('tests', 'test_id = ?', [$test_id_to_delete]);
             set_message('success', 'Đã xóa bài kiểm tra thành công.');
@@ -22,10 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     } elseif ($action === 'reopen_test') {
         $test_id_to_reopen = $_POST['test_id'] ?? null;
         if ($test_id_to_reopen) {
-            $submission = $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id_to_reopen]);
-            if ($submission) {
-                $db->delete('answers', 'submission_id = ?', [$submission['submission_id']]);
-                $db->delete('submissions', 'submission_id = ?', [$submission['submission_id']]);
+            // Sửa lỗi: Xóa TẤT CẢ các bài làm và câu trả lời liên quan
+            $submissions = $db->fetchAll("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id_to_reopen]);
+            if (!empty($submissions)) {
+                foreach ($submissions as $sub) {
+                    $db->delete('answers', 'submission_id = ?', [$sub['submission_id']]);
+                }
+                $db->delete('submissions', 'test_id = ?', [$test_id_to_reopen]);
                 set_message('success', 'Đã mở lại bài kiểm tra. Mã đề này bây giờ có thể được sử dụng lại.');
             } else {
                 set_message('error', 'Không tìm thấy bài làm nào được liên kết với mã đề này để mở lại.');
@@ -37,11 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $deleted_count = 0;
             foreach ($test_ids_to_delete as $test_id) {
                 $test_id = intval($test_id);
-                // Để an toàn, hãy kiểm tra xem bài làm có tồn tại không trước khi xóa
-                $submission = $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id]);
-                if ($submission) {
-                    $db->delete('answers', 'submission_id = ?', [$submission['submission_id']]);
-                    $db->delete('submissions', 'submission_id = ?', [$submission['submission_id']]);
+                // Sửa lỗi: Xóa TẤT CẢ các bài làm và câu trả lời liên quan
+                $submissions = $db->fetchAll("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id]);
+                if (!empty($submissions)) {
+                    foreach ($submissions as $sub) {
+                        $db->delete('answers', 'submission_id = ?', [$sub['submission_id']]);
+                    }
+                    $db->delete('submissions', 'test_id = ?', [$test_id]);
                 }
                 $db->delete('test_questions', 'test_id = ?', [$test_id]);
                 $db->delete('tests', 'test_id = ?', [$test_id]);
@@ -55,10 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $reopened_count = 0;
             foreach ($test_ids_to_reopen as $test_id) {
                 $test_id = intval($test_id);
-                $submission = $db->fetch("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id]);
-                if ($submission) {
-                    $db->delete('answers', 'submission_id = ?', [$submission['submission_id']]);
-                    $db->delete('submissions', 'submission_id = ?', [$submission['submission_id']]);
+                // Sửa lỗi: Xóa TẤT CẢ các bài làm và câu trả lời liên quan
+                $submissions = $db->fetchAll("SELECT submission_id FROM submissions WHERE test_id = ?", [$test_id]);
+                if (!empty($submissions)) {
+                    foreach ($submissions as $sub) {
+                        $db->delete('answers', 'submission_id = ?', [$sub['submission_id']]);
+                    }
+                    $db->delete('submissions', 'test_id = ?', [$test_id]);
                     $reopened_count++;
                 }
             }
@@ -84,14 +101,15 @@ if ($filter_contest === null && !empty($contests)) {
 
 $filter_status = $_GET['status'] ?? 'ready'; // Mặc định là 'Sẵn Sàng'
 
-$sql = "SELECT t.*, s.submission_id 
-        FROM tests t LEFT JOIN submissions s ON t.test_id = s.test_id";
+// Cải tiến truy vấn SQL để rõ ràng và ổn định hơn
+$sql = "SELECT t.*, 
+               (SELECT COUNT(s.submission_id) FROM submissions s WHERE s.test_id = t.test_id) as submission_count
+        FROM tests t";
 $params = [];
-
 $where_clauses = [];
 
 if (!empty($filter_contest)) {
-    $where_clauses[] = "t.contest_name = ?";
+    $where_clauses[] = "contest_name = ?";
     $params[] = $filter_contest;
 }
 
@@ -99,19 +117,19 @@ if (!empty($where_clauses)) {
     $sql .= " WHERE " . implode(' AND ', $where_clauses);
 }
 
-// Thêm GROUP BY để đảm bảo mỗi đề thi chỉ xuất hiện một lần
-$sql .= " GROUP BY t.test_id ORDER BY t.created_at DESC";
-
 // Lọc theo trạng thái sau khi đã group
 if ($filter_status === 'ready') {
-    $sql = str_replace("GROUP BY t.test_id", "GROUP BY t.test_id HAVING COUNT(s.submission_id) = 0", $sql);
+    $sql .= (empty($where_clauses) ? " WHERE " : " AND ") . " NOT EXISTS (SELECT 1 FROM submissions s WHERE s.test_id = t.test_id)";
 } elseif ($filter_status === 'used') {
-    $sql = str_replace("GROUP BY t.test_id", "GROUP BY t.test_id HAVING COUNT(s.submission_id) > 0", $sql);
+    $sql .= (empty($where_clauses) ? " WHERE " : " AND ") . " EXISTS (SELECT 1 FROM submissions s WHERE s.test_id = t.test_id)";
 }
+
+$sql .= " ORDER BY t.created_at DESC";
 
 $tests = $db->fetchAll($sql, $params);
 
 // Tối ưu hóa: Đếm số lượng cho các tab trong một truy vấn duy nhất
+// Cải tiến truy vấn đếm để chính xác hơn
 $count_sql = "
     SELECT
         COUNT(DISTINCT t.test_id) AS total,
@@ -120,6 +138,7 @@ $count_sql = "
     FROM tests t
     LEFT JOIN submissions s ON t.test_id = s.test_id
 ";
+
 $counts_result = $db->fetch($count_sql);
 $count_all = $counts_result['total'] ?? 0;
 $count_ready = $counts_result['ready'] ?? 0;
@@ -181,8 +200,9 @@ include APP_ROOT . '/templates/partials/header.php';
             <?php else: ?>
                 <?php foreach ($tests as $test): 
                     $is_used = !is_null($test['submission_id']);
-                    $status_class = $is_used ? 'used' : 'ready';
-                    $status_text = $is_used ? 'Đã dùng' : 'Sẵn sàng';
+                    $is_used = isset($test['submission_count']) ? $test['submission_count'] > 0 : !is_null($test['submission_id']);
+                    $status_class = $is_used ? 'used' : 'ready'; // 'used' or 'ready'
+                    $status_text = $is_used ? 'Đã dùng' : 'Sẵn sàng'; // 'Đã dùng' or 'Sẵn sàng'
                 ?>
                     <tr class="<?php echo $status_class; ?>">
                         <td><input type="checkbox" class="test-checkbox" name="test_ids[]" value="<?php echo $test['test_id']; ?>"></td>
@@ -199,18 +219,15 @@ include APP_ROOT . '/templates/partials/header.php';
                                 <?php if (!$is_used): ?>
                                     <a href="/grader/tests/edit?id=<?php echo $test['test_id']; ?>" class="gdv-button small secondary" title="Sửa đề thi">Sửa</a>
                                 <?php else: ?>
-                                    <form method="POST" action="/grader/tests" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn MỞ LẠI bài kiểm tra này? Hành động này sẽ XÓA bài làm hiện tại của thí sinh.');">
-                                        <?php csrf_field(); ?>
-                                        <input type="hidden" name="action" value="reopen_test">
-                                        <input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
-                                        <button type="submit" class="gdv-button small" style="background-color: var(--gdv-success);" title="Mở lại đề thi">Mở lại</button>
-                                    </form>
+                                    <!-- Sửa lỗi: Chuyển sang dùng link và JS để submit form, tránh xung đột -->
+                                    <a href="#" class="gdv-button small action-button" style="background-color: var(--gdv-success);" 
+                                       data-action="reopen_test" data-id="<?php echo $test['test_id']; ?>" 
+                                       data-confirm="Bạn có chắc chắn muốn MỞ LẠI bài kiểm tra này? Hành động này sẽ XÓA bài làm hiện tại của thí sinh.">Mở lại</a>
                                 <?php endif; ?>
-                                <form method="POST" action="/grader/tests" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài kiểm tra này?');">
-                                    <?php csrf_field(); ?>
-                                    <input type="hidden" name="action" value="delete_test"><input type="hidden" name="test_id" value="<?php echo $test['test_id']; ?>">
-                                    <button type="submit" class="gdv-button small danger" title="Xóa đề thi">Xóa</button>
-                                </form>
+                                <!-- Sửa lỗi: Chuyển sang dùng link và JS để submit form, tránh xung đột -->
+                                <a href="#" class="gdv-button small danger action-button" 
+                                   data-action="delete_test" data-id="<?php echo $test['test_id']; ?>" 
+                                   data-confirm="Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài kiểm tra này?">Xóa</a>
                             </div>
                         </td>
                     </tr>
@@ -224,17 +241,17 @@ include APP_ROOT . '/templates/partials/header.php';
 <div class="gdv-bulk-actions" id="bulk-actions-bar">
     <span id="bulk-actions-count">Đã chọn 0 mục</span>
     <div style="display: flex; gap: 10px;">
-        <form id="bulk-reopen-form" method="POST" action="/grader/tests" onsubmit="return confirm('Mở lại các đề đã chọn? Bài làm của thí sinh sẽ bị xóa.');">
+        <form id="bulk-reopen-form" method="POST" action="/grader/tests">
             <?php csrf_field(); ?>
             <input type="hidden" name="action" value="bulk_reopen">
         </form>
-        <button type="submit" form="bulk-reopen-form" class="gdv-button" style="background-color: var(--gdv-success);">Mở lại đã chọn</button>
+        <button type="button" data-form="bulk-reopen-form" class="gdv-button bulk-action-trigger" style="background-color: var(--gdv-success);">Mở lại đã chọn</button>
 
-        <form id="bulk-delete-form" method="POST" action="/grader/tests" onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN các mục đã chọn?');">
+        <form id="bulk-delete-form" method="POST" action="/grader/tests">
             <?php csrf_field(); ?>
             <input type="hidden" name="action" value="bulk_delete">
         </form>
-        <button type="submit" form="bulk-delete-form" class="gdv-button danger">Xóa đã chọn</button>
+        <button type="button" data-form="bulk-delete-form" class="gdv-button danger bulk-action-trigger">Xóa đã chọn</button>
     </div>
     <button type="button" id="bulk-actions-cancel" class="gdv-button secondary">Hủy</button>
 </div>
@@ -272,17 +289,22 @@ document.addEventListener('DOMContentLoaded', function() {
             bulkActionsCount.textContent = `Đã chọn ${count} mục`;
             bulkActionsBar.classList.add('visible');
 
-            // Cập nhật form xóa hàng loạt
-            bulkDeleteForm.innerHTML = '<input type="hidden" name="action" value="bulk_delete">'; // Reset form
-            bulkReopenForm.innerHTML = '<input type="hidden" name="action" value="bulk_reopen">'; // Reset form
+            // Sửa lỗi: Reset form mà không xóa mất csrf_token
+            // Xóa các input test_ids[] cũ
+            bulkDeleteForm.querySelectorAll('input[name="test_ids[]"]').forEach(input => input.remove());
+            bulkReopenForm.querySelectorAll('input[name="test_ids[]"]').forEach(input => input.remove());
 
             selectedCheckboxes.forEach(checkbox => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'test_ids[]';
                 input.value = checkbox.value;
-                bulkDeleteForm.appendChild(input.cloneNode());
-                bulkReopenForm.appendChild(input.cloneNode());
+                
+                // Thêm input mới vào cả hai form
+                const inputForDelete = input.cloneNode();
+                const inputForReopen = input.cloneNode();
+                bulkDeleteForm.appendChild(inputForDelete);
+                bulkReopenForm.appendChild(inputForReopen);
             });
         } else {
             bulkActionsBar.classList.remove('visible');
@@ -300,6 +322,69 @@ document.addEventListener('DOMContentLoaded', function() {
         selectAllCheckbox.checked = false;
         itemCheckboxes.forEach(checkbox => checkbox.checked = false);
         updateBulkActionsBar();
+    });
+
+    // Sửa lỗi: Xử lý nút Xóa/Mở lại bằng JS để đảm bảo form được submit đúng cách
+    const actionButtons = document.querySelectorAll('.action-button');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.dataset.action;
+            const testId = this.dataset.id;
+            const confirmationMessage = this.dataset.confirm;
+
+            if (confirm(confirmationMessage)) {
+                // Tạo một form động để submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/grader/tests';
+
+                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+                const inputs = {
+                    'csrf_token': csrfToken,
+                    'action': action,
+                    'test_id': testId
+                };
+
+                for (const name in inputs) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = inputs[name];
+                    form.appendChild(input);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+
+    // Sửa lỗi: Kích hoạt submit form hàng loạt bằng JS
+    document.querySelectorAll('.bulk-action-trigger').forEach(button => {
+        button.addEventListener('click', function() {
+            const formId = this.getAttribute('data-form');
+            const form = document.getElementById(formId);
+            if (!form) return;
+
+            const selectedCount = document.querySelectorAll('.test-checkbox:checked').length;
+            if (selectedCount === 0) {
+                alert('Vui lòng chọn ít nhất một mục.');
+                return;
+            }
+
+            let confirmationMessage = '';
+            if (formId === 'bulk-delete-form') {
+                confirmationMessage = `Bạn có chắc chắn muốn XÓA VĨNH VIỄN ${selectedCount} mục đã chọn?`;
+            } else if (formId === 'bulk-reopen-form') {
+                confirmationMessage = `Bạn có chắc chắn muốn MỞ LẠI ${selectedCount} đề đã chọn? Bài làm của thí sinh sẽ bị xóa.`;
+            }
+
+            if (confirmationMessage && confirm(confirmationMessage)) {
+                form.submit();
+            }
+        });
     });
 });
 </script>

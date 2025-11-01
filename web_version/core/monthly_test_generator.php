@@ -81,7 +81,13 @@ try {
 
         // Tạo tiêu đề và mã đề
         $test_title = $contest_name . ' - Đề #' . ($i + 1);
-        $ma_de = strtoupper(substr(md5($batch_id . '-' . $i), 0, 8));
+        
+        // Cải tiến: Đảm bảo mã đề là duy nhất
+        do {
+            $ma_de = strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)); // Dùng random_bytes an toàn hơn
+            $is_duplicate = $db->fetch("SELECT test_id FROM tests WHERE ma_de = ?", [$ma_de]);
+        } while ($is_duplicate);
+
 
         $test_data = [
             'title' => $test_title,
